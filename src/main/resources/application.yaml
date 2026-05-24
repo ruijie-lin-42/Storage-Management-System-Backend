@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: storage_management_system_backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      max-pool-size: 30
+      minimum-pool-size: 30
+      connection-timeout: 5000
+      idle-timeout: 0
+      max-lifetime: 18000000
+server:
+  port: 8090
+jwt:
+  secret: ${JWT_SECRET}
