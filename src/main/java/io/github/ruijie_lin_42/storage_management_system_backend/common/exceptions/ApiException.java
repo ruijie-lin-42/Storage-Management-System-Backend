@@ -4,12 +4,12 @@ import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Re
 import lombok.Getter;
 
 @Getter
-public class ApiException extends RuntimeException{
+public class ApiException extends CustomException{
 
     private final ResultCode code;
 
     public ApiException(ResultCode resultCode){
-        super(resultCode.getMessage());
+        super(resultCode);
         this.code = resultCode;
     }
 

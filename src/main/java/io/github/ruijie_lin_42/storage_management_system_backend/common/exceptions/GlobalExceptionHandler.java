@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ApiException.class)
-    public Result<Void> handleApiException(ApiException e){
+    @ExceptionHandler(CustomException.class)
+    public Result<Void> handleApiException(CustomException e){
         return Result.fail(e.getCode());
     }
 
