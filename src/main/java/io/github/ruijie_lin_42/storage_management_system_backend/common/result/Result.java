@@ -1,6 +1,6 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.common.result;
 
-import io.github.ruijie_lin_42.storage_management_system_backend.common.constants.ResultCode;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -24,7 +24,7 @@ public class Result<T> {
         return Result.of(ResultCode.SUCCESS, data);
     }
 
-    public static <T> Result<T> error(ResultCode resultCode){
+    public static <T> Result<T> fail(ResultCode resultCode){
         return Result.of(resultCode, null);
     }
 

@@ -1,0 +1,21 @@
+package io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions;
+
+import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.result.Result;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ApiException.class)
+    public Result<Void> handleApiException(ApiException e){
+        return Result.fail(e.getCode());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public Result<Void> handleException(Exception e){
+        return Result.fail(ResultCode.SYSTEM_ERROR);
+    }
+
+}

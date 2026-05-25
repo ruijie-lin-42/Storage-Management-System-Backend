@@ -1,4 +1,4 @@
-package io.github.ruijie_lin_42.storage_management_system_backend.config;
+package io.github.ruijie_lin_42.storage_management_system_backend.common.advice;
 
 import io.github.ruijie_lin_42.storage_management_system_backend.common.result.Result;
 import org.springframework.core.MethodParameter;

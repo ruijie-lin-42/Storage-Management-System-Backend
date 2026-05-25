@@ -1,4 +1,4 @@
-package io.github.ruijie_lin_42.storage_management_system_backend.common.constants;
+package io.github.ruijie_lin_42.storage_management_system_backend.common.enums;
 
 public enum ResultCode {
 
@@ -6,12 +6,16 @@ public enum ResultCode {
     // 3xx重定向
     // 4xx客户端错误
     // 5xx服务端错误
-    SUCCESS(200, "success"),
+    // Defaults
+    SUCCESS(0, "success"),
     PARAM_ERROR(400, "parameter error"),
     UNAUTHORIZED(401, "unauthorized"),
     FORBIDDEN(403, "forbidden"),
     NOT_FOUND(404, "not found"),
     SYSTEM_ERROR(500, "system error");
+
+    // TODO: add custom result codes here
+
 
     private final int code;
     private final String message;
