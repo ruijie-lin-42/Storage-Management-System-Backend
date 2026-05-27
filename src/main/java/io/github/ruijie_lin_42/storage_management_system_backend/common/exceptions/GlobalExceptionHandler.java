@@ -15,6 +15,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Result<Void> handleException(Exception e){
+        e.printStackTrace();
         return Result.fail(ResultCode.SYSTEM_ERROR);
     }
 

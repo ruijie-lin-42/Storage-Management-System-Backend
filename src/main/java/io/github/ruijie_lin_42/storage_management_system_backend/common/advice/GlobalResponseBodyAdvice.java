@@ -16,6 +16,9 @@ public class GlobalResponseBodyAdvice implements ResponseBodyAdvice<Object> {
     // beforeBodyWrite should be invoked all the times
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
+        if (returnType.getContainingClass().getName().startsWith("org.springdoc")) {
+            return false;
+        }
         return true;
     }
 
