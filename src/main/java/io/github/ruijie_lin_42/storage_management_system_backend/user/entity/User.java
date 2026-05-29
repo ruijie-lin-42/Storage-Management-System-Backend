@@ -2,6 +2,8 @@ package io.github.ruijie_lin_42.storage_management_system_backend.user.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Role;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Status;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -62,12 +64,12 @@ public class User implements Serializable {
     /**
      * role: 0=SUPER_ADMIN，1=ADMIN，2=USER
      */
-    private Integer role;
+    private Role role;
 
     /**
      * user status: 0=valid, 1=banned
      */
-    private Integer status;
+    private Status status;
 
     /**
      * if user is deleted

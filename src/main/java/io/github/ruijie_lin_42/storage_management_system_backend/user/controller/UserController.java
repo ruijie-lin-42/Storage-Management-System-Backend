@@ -7,13 +7,13 @@ import io.github.ruijie_lin_42.storage_management_system_backend.common.vo.PageR
 import io.github.ruijie_lin_42.storage_management_system_backend.user.dto.CreateUserDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.dto.EditUserDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.dto.UserQueryDTO;
+import io.github.ruijie_lin_42.storage_management_system_backend.user.service.UserService;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.vo.UserVo;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.*;
-import io.github.ruijie_lin_42.storage_management_system_backend.user.service.IUserService;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.entity.User;
 
 /**
@@ -29,7 +29,7 @@ import io.github.ruijie_lin_42.storage_management_system_backend.user.entity.Use
 @RequiredArgsConstructor
 public class UserController {
 
-    private final IUserService userService;
+    private final UserService userService;
 
     @PostMapping
     @Operation(description = "add new user")

@@ -20,6 +20,12 @@ public enum ResultCode {
     DUPLICATE_USERNAME(10101, "username already exists"),
     USER_UNAVAILABLE(10102, "requested user unavailable"),
 
+    // 20001 - 29999 auth exception
+    // 201xx user authentication invalid
+    LOGIN_FAIL(20201, "username or password incorrect"),
+    USER_NOT_FOUND(20202, "user not found"),
+    // 202xx token invalid
+    INVALID_TOKEN(20203, "token invalid"),
 
     // 90001 - 99999 system exception
     INSERT_AFFECTED_ROWS_INVALID(90001, "insert failed, affected multiple rows"),

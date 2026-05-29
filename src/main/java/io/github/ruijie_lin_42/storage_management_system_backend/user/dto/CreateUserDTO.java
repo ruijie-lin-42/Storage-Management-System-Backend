@@ -1,5 +1,6 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.user.dto;
 
+import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Role;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -28,7 +29,7 @@ public class CreateUserDTO {
     @NotBlank
     @Email
     private String email;
-    @Min(0)
-    @Max(2)
-    private int role;
+    @NotNull
+    @NotBlank
+    private Role role;
 }
