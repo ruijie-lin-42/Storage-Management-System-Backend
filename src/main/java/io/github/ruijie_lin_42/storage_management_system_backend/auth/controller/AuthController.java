@@ -1,6 +1,7 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.auth.controller;
 
 import io.github.ruijie_lin_42.storage_management_system_backend.auth.dto.LoginRequestDTO;
+import io.github.ruijie_lin_42.storage_management_system_backend.auth.dto.LoginResponseDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.auth.dto.UserAuthDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.auth.entity.RefreshToken;
 import io.github.ruijie_lin_42.storage_management_system_backend.auth.service.AuthService;
@@ -35,7 +36,7 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/login")
-    public ResponseEntity<Result<String>> login(@RequestBody LoginRequestDTO loginRequestDTO){
+    public ResponseEntity<Result<LoginResponseDTO>> login(@RequestBody LoginRequestDTO loginRequestDTO){
         UserAuthDTO user = authService.login(loginRequestDTO);
         String accessToken = jwtService.getToken(user.getUserId(), user.getRole());
         String refreshToken = refreshTokenService.createRefreshToken(user.getUserId());
@@ -47,9 +48,11 @@ public class AuthController {
                 .path("/")
                 .sameSite("strict")
                 .build();
+        LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
+        loginResponseDTO.setAccessToken(accessToken);
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(Result.success(accessToken));
+                .body(Result.success(loginResponseDTO));
     }
 
     @PostMapping("/refresh")
