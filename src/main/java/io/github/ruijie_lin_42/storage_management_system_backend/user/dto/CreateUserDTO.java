@@ -30,6 +30,5 @@ public class CreateUserDTO {
     @Email
     private String email;
     @NotNull
-    @NotBlank
     private Role role;
 }

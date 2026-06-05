@@ -17,13 +17,21 @@ public class RefreshTokenService {
     private final RefreshTokenMapper refreshTokenMapper;
 
     public String createRefreshToken(Long userId){
+        LambdaQueryWrapper<RefreshToken> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(RefreshToken::getUserId, userId);
+        RefreshToken oldToken = refreshTokenMapper.selectOne(lambdaQueryWrapper);
         String rawToken = UUID.randomUUID().toString();
         RefreshToken token = new RefreshToken();
         token.setUserId(userId);
         token.setTokenHash(DigestUtils.sha256Hex(rawToken));
         token.setExpiration(LocalDateTime.now().plusDays(1));
         token.setRevoked(false);
-        refreshTokenMapper.insert(token);
+        if(oldToken == null){
+            refreshTokenMapper.insert(token);
+        }else{
+            token.setId(oldToken.getId());
+            refreshTokenMapper.updateById(token);
+        }
         return rawToken;
     }
 

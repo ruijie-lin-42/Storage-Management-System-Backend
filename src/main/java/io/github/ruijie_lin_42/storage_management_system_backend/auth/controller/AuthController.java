@@ -1,7 +1,7 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.auth.controller;
 
+import io.github.ruijie_lin_42.storage_management_system_backend.auth.vo.AuthVo;
 import io.github.ruijie_lin_42.storage_management_system_backend.auth.dto.LoginRequestDTO;
-import io.github.ruijie_lin_42.storage_management_system_backend.auth.dto.LoginResponseDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.auth.dto.UserAuthDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.auth.entity.RefreshToken;
 import io.github.ruijie_lin_42.storage_management_system_backend.auth.service.AuthService;
@@ -11,7 +11,6 @@ import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Re
 import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.DataIntegrityException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.result.Result;
-import io.github.ruijie_lin_42.storage_management_system_backend.user.entity.User;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.vo.UserVo;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,7 +35,7 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/login")
-    public ResponseEntity<Result<LoginResponseDTO>> login(@RequestBody LoginRequestDTO loginRequestDTO){
+    public ResponseEntity<Result<AuthVo>> login(@RequestBody LoginRequestDTO loginRequestDTO){
         UserAuthDTO user = authService.login(loginRequestDTO);
         String accessToken = jwtService.getToken(user.getUserId(), user.getRole());
         String refreshToken = refreshTokenService.createRefreshToken(user.getUserId());
@@ -48,15 +47,17 @@ public class AuthController {
                 .path("/")
                 .sameSite("strict")
                 .build();
-        LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
-        loginResponseDTO.setAccessToken(accessToken);
+        UserVo userVo = authService.findUserById(user.getUserId());
+        AuthVo authVo = new AuthVo();
+        authVo.setAccessToken(accessToken);
+        authVo.setUser(userVo);
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(Result.success(loginResponseDTO));
+                .body(Result.success(authVo));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<Result<String>> refresh(HttpServletRequest request){
+    public ResponseEntity<Result<AuthVo>> refresh(HttpServletRequest request){
         Cookie[] cookies = request.getCookies();
         if(cookies == null){
             throw new AuthException(ResultCode.INVALID_TOKEN);
@@ -78,12 +79,15 @@ public class AuthController {
                 }
                 throw new AuthException(ResultCode.INVALID_TOKEN);
             }else{
-                UserAuthDTO user = authService.findAuthInfoByUserId(token.getUserId());
+                UserVo user = authService.findUserById(token.getUserId());
                 if(user == null){
                     throw new AuthException(ResultCode.INVALID_TOKEN);
                 }
-                String newToken = jwtService.getToken(user.getUserId(), user.getRole());
-                return ResponseEntity.ok().body(Result.success(newToken));
+                String newToken = jwtService.getToken(user.getId(), user.getRole());
+                AuthVo authVo = new AuthVo();
+                authVo.setAccessToken(newToken);
+                authVo.setUser(user);
+                return ResponseEntity.ok().body(Result.success(authVo));
             }
         }else{
             throw new AuthException(ResultCode.INVALID_TOKEN);
