@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.ruijie_lin_42.storage_management_system_backend.storage.mapper.StorageMapper">
+    <select id="selectStorageDetailByName" resultType="io.github.ruijie_lin_42.storage_management_system_backend.storage.vo.StorageVo">
+        SELECT
+            storage.name,
+            storage.address,
+            manager.name AS manager,
+            storage.created_at,
+            createdBy.name AS createdBy,
+            storage.updated_at,
+            updatedBy.name AS updatedBy,
+            remark
+        FROM storage
+        LEFT JOIN user manager ON storage.manager_id = manager.id
+        LEFT JOIN user createdBy ON storage.created_by = createdBy.id
+        LEFT JOIN user updatedBy ON storage.updated_by = updatedBy.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                storage.name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            AND storage.is_deleted = 0
+        </where>
+    </select>
+</mapper>

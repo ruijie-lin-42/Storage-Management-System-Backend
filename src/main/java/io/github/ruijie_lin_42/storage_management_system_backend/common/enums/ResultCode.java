@@ -20,6 +20,11 @@ public enum ResultCode {
     DUPLICATE_USERNAME(10101, "username already exists"),
     USER_UNAVAILABLE(10102, "requested user unavailable"),
 
+    // 20001 - 29999 storage exception
+    // 201xx parameter invalid
+    DUPLICATE_STORAGE_NAME(20101, "storage name already exists"),
+    STORAGE_UNAVAILABLE(20102, "requested storage unavailable"),
+
     // 20001 - 29999 auth exception
     // 201xx user authentication invalid
     LOGIN_FAIL(20201, "username or password incorrect"),
