@@ -7,9 +7,11 @@ import java.time.LocalDateTime;
 @Data
 public class StorageVo {
 
+    private Long id;
     private String name;
     private String address;
-    private String manager;
+    private Long managerId;
+    private String managerName;
     private LocalDateTime createdAt;
     private String createdBy;
     private LocalDateTime updatedAt;

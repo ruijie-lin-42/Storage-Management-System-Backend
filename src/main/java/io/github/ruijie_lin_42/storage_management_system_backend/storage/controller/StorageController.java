@@ -33,7 +33,7 @@ public class StorageController {
 
     @PostMapping
     @Operation(description = "add new storage")
-    public Void save(@RequestBody @Valid CreateStorageDTO user) {
+    public Void addNewStorage(@RequestBody @Valid CreateStorageDTO user) {
         try{
             int affectedNumRows = storageService.createStorage(user);
             if(affectedNumRows > 1){
@@ -46,14 +46,14 @@ public class StorageController {
     }
 
     @PostMapping("/search")
-    @Operation(description = "fuzzy search for a user using their names")
-    public PageResultVo<StorageVo> queryPage(@RequestBody StorageQueryDTO storageQueryDTO) {
+    @Operation(description = "fuzzy search for a storage using their names")
+    public PageResultVo<StorageVo> queryStorageByNameInPage(@RequestBody StorageQueryDTO storageQueryDTO) {
         return storageService.queryInPage(storageQueryDTO);
     }
 
     @PatchMapping("/{id}")
-    @Operation(description = "edit user using their id")
-    public Void updateById(@RequestBody @Valid EditStorageDTO storage, @PathVariable Long id) {
+    @Operation(description = "edit storage using the id")
+    public Void updateStorageById(@RequestBody @Valid EditStorageDTO storage, @PathVariable Long id) {
         int affectedNumRows = storageService.editById(storage, id);
         if(affectedNumRows == 0){
             throw new ApiException(ResultCode.STORAGE_UNAVAILABLE);
@@ -64,8 +64,8 @@ public class StorageController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(description = "delete user (mark them as deleted)")
-    public Void remove(@PathVariable Long id) {
+    @Operation(description = "delete storage (mark them as deleted) by id")
+    public Void deleteStorageById(@PathVariable Long id) {
         int affectedNumRows = storageService.removeById(id);
         if(affectedNumRows > 1){
             throw new DataIntegrityException(ResultCode.DELETE_AFFECTED_ROWS_INVALID);
@@ -74,8 +74,8 @@ public class StorageController {
     }
 
     @GetMapping("/exists")
-    @Operation(description = "check if the username already exists")
-    public Boolean ifUsernameExists(@RequestParam String name) {
+    @Operation(description = "check if the storage's name already exists")
+    public Boolean ifStorageNameExists(@RequestParam String name) {
         return !storageService.lambdaQuery().eq(Storage::getName, name).list().isEmpty();
     }
 

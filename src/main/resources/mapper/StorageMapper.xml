@@ -3,9 +3,11 @@
 <mapper namespace="io.github.ruijie_lin_42.storage_management_system_backend.storage.mapper.StorageMapper">
     <select id="selectStorageDetailByName" resultType="io.github.ruijie_lin_42.storage_management_system_backend.storage.vo.StorageVo">
         SELECT
+            storage.id,
             storage.name,
             storage.address,
-            manager.name AS manager,
+            manager.id AS managerId,
+            manager.name AS managerName,
             storage.created_at,
             createdBy.name AS createdBy,
             storage.updated_at,

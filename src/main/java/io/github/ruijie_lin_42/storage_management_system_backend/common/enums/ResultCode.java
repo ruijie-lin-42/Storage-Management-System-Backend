@@ -15,34 +15,58 @@ public enum ResultCode {
     SYSTEM_ERROR(500, "system error"),
 
     // TODO: add custom result codes here
-    // 10001 - 19999 user exception
-    // 101xx parameter invalid
-    DUPLICATE_USERNAME(10101, "username already exists"),
-    USER_UNAVAILABLE(10102, "requested user unavailable"),
 
-    // 20001 - 29999 storage exception
-    // 201xx parameter invalid
-    DUPLICATE_STORAGE_NAME(20101, "storage name already exists"),
-    STORAGE_UNAVAILABLE(20102, "requested storage unavailable"),
+    /**
+     * 1xxx client error
+     */
 
-    // 20001 - 29999 auth exception
-    // 201xx user authentication invalid
-    LOGIN_FAIL(20201, "username or password incorrect"),
-    USER_NOT_FOUND(20202, "user not found"),
-    // 202xx token invalid
-    INVALID_TOKEN(20203, "token invalid"),
+    // 11xx request parameter error
+    JSON_SYNTAX_ERROR(1101, "JSON syntax error"),
+    ARGUMENT_TYPE_MISMATCH(1102, "unexpected parameter type"),
+    ARGUMENT_NOT_VALID(1103, "argument contains invalid values"),
 
-    // 90001 - 99999 system exception
-    INSERT_AFFECTED_ROWS_INVALID(90001, "insert failed, affected multiple rows"),
-    UPDATE_AFFECTED_ROWS_INVALID(90002, "update failed, affected multiple rows"),
-    DELETE_AFFECTED_ROWS_INVALID(90003, "delete failed, affected multiple rows"),
+    /**
+     * 2xxx business error
+     */
+
+    // 21xx user exception
+    DUPLICATE_USERNAME(2101, "username already exists"),
+    USER_UNAVAILABLE(2102, "requested user unavailable"),
+
+    // 22xx auth exception
+    // 221x user authentication invalid
+    LOGIN_FAIL(2201, "username or password incorrect"),
+    USER_NOT_FOUND(2202, "user not found"),
+    // 222x token invalid
+    INVALID_TOKEN(2203, "token invalid"),
+
+    // 23xx storage exception
+    DUPLICATE_STORAGE_NAME(2301, "storage name already exists"),
+    STORAGE_UNAVAILABLE(2302, "requested storage unavailable"),
+
+    // 24xx items exception
+    INVALID_INCREMENT(2401, "increment of stock invalid"),
+    INVALID_DECREMENT(2402, "decrement of stock invalid"),
+    INVALID_ITEM_STOCK(2403, "item does not have enough stock or doesn't exist"),
+
+    // 29xx database integrity exception
+    INSERT_AFFECTED_ROWS_INVALID(2901, "insert failed, affected multiple rows"),
+    UPDATE_AFFECTED_ROWS_INVALID(2902, "update failed, affected multiple rows"),
+    DELETE_AFFECTED_ROWS_INVALID(2903, "delete failed, affected multiple rows"),
+
+    /**
+     * 3xxx system error
+     */
+
+    // 31xx database exception
+    DATABASE_CONNECTION_FAILED(3101, "system busy, please try later"),
 
     ;
 
     private final int code;
     private final String message;
 
-    ResultCode(int code, String message){
+    ResultCode(int code, String message) {
         this.code = code;
         this.message = message;
     }

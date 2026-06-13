@@ -27,6 +27,7 @@ public class SecurityFilterChainConfig {
                         authorizationManagerRequestMatcherRegistry
                                 .requestMatchers("/auth/login", "/auth/refresh").permitAll()
                                 .anyRequest().authenticated())
+//                                .anyRequest().permitAll())
                 .sessionManagement(httpSecuritySessionManagementConfigurer ->
                         httpSecuritySessionManagementConfigurer
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

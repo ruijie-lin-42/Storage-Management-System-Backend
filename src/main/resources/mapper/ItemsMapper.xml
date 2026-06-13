@@ -1,5 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="io.github.ruijie_lin_42.storage_management_system_backend.items.mapper.ItemsMapper">
-
+    <select id="selectItemsDetail" resultType="io.github.ruijie_lin_42.storage_management_system_backend.items.vo.ItemsVo">
+        SELECT
+            items.id,
+            item_info.name,
+            item_info.description,
+            category.name AS category,
+            item_info.unit,
+            item_info.sku,
+            item_info.price,
+            items.count
+        FROM item_info
+        LEFT JOIN category ON item_info.category_id = category.id
+        LEFT JOIN items ON items.item_id = item_info.id
+        <where>
+            #{storageId} = items.storage_id
+            <if test="keyword != null and keyword != ''">
+                AND item_info.name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="categoryName != null and categoryName != ''">
+                AND category.name LIKE CONCAT('%', #{categoryName}, '%')
+            </if>
+        </where>
+    </select>
+    <select id="selectForUpdate" resultType="io.github.ruijie_lin_42.storage_management_system_backend.items.entity.Items">
+        SELECT *
+        FROM items
+        WHERE item_id = #{itemId} and storage_id = #{storageId}
+        FOR UPDATE
+    </select>
+    <insert id="insertItem">
+        INSERT INTO items (item_id, storage_id, count)
+        VALUES (#{itemId}, #{storageId}, #{count})
+    </insert>
+    <update id="updateItemCount">
+        UPDATE items
+        SET count = #{count}
+        WHERE item_id = #{itemId} AND storage_id = #{storageId}
+    </update>
 </mapper>

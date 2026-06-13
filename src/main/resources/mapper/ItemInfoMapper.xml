@@ -1,5 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="io.github.ruijie_lin_42.storage_management_system_backend.items.mapper.ItemInfoMapper">
-
+    <select id="getItemInfo" resultType="io.github.ruijie_lin_42.storage_management_system_backend.items.vo.ItemInfoDetailVo">
+        SELECT
+            item_info.id,
+            item_info.name,
+            item_info.description,
+            category.name AS category,
+            item_info.unit,
+            item_info.sku,
+            item_info.price
+        FROM item_info
+        LEFT JOIN category ON item_info.category_id = category.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND item_info.name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="categoryName != null and categoryName != ''">
+                AND category.name LIKE CONCAT('%', #{categoryName}, '%')
+            </if>
+        </where>
+    </select>
+    <select id="getStorageItemInfo" resultType="io.github.ruijie_lin_42.storage_management_system_backend.items.vo.StorageItemInfoVo">
+        SELECT
+            item_info.id,
+            item_info.name,
+            item_info.sku,
+            item_info.unit,
+            COALESCE(items.count, 0) AS count
+        FROM item_info
+        LEFT JOIN items ON #{storageId} = items.storage_id AND item_info.id = items.item_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                item_info.name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+    </select>
 </mapper>
