@@ -8,10 +8,7 @@ import io.github.ruijie_lin_42.storage_management_system_backend.items.vo.ItemIn
 import io.github.ruijie_lin_42.storage_management_system_backend.items.vo.StorageItemInfoVo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * <p>
@@ -36,6 +33,11 @@ public class ItemInfoController {
     @PostMapping("/search")
     public PageResultVo<StorageItemInfoVo> queryStorageItemInfo(@RequestBody @Valid StorageItemInfoQueryDTO storageItemInfoQueryDTO){
         return itemInfoService.queryStorageItemInfoInPage(storageItemInfoQueryDTO);
+    }
+
+    @GetMapping("/{id}/page")
+    public Integer getStockAdjustmentHistoryPageNumById(@PathVariable("id") Long itemId, @RequestParam Integer pageSize){
+        return itemInfoService.getPageNumByItemId(itemId, pageSize);
     }
 
 }

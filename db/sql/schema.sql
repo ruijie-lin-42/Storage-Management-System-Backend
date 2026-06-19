@@ -111,10 +111,14 @@ create table if not exists stock_adjustment_history
 (
     id         bigint auto_increment comment 'id'
         primary key,
+    storage_id bigint       not null comment 'the storage the adjustment happened (id)',
     created_by bigint       not null comment 'who created this adjustment (id)',
     created_at datetime     not null comment 'when is this adjustment created',
     type       varchar(20)  not null comment 'the type of transaction',
+    amount     int          not null comment 'the number of items changed',
     remark     varchar(150) not null comment 'reason',
+    constraint fk_item_stock_history_storage_id
+        foreign key (storage_id) references storage (id),
     constraint fk_stock_adjustment_history_created_by
         foreign key (created_by) references user (id)
 );
@@ -125,7 +129,6 @@ create table if not exists item_stock_history
     id            bigint auto_increment comment 'id'
         primary key,
     adjustment_id bigint not null comment 'which adjustment did the stock change happened',
-    storage_id    bigint not null comment 'the storage the item is in (id)',
     item_id       bigint not null comment 'which item is being changed (id)',
     stock_before  int    not null comment 'the stock before the change',
     amount_change int    not null comment 'the amount of stock being changed',
@@ -133,8 +136,6 @@ create table if not exists item_stock_history
     constraint fk_item_stock_history_item_id
         foreign key (item_id) references item_info (id),
     constraint fk_item_stock_history_stock_adjustment_history
-        foreign key (adjustment_id) references stock_adjustment_history (id),
-    constraint fk_item_stock_history_storage_id
-        foreign key (storage_id) references storage (id)
+        foreign key (adjustment_id) references stock_adjustment_history (id)
 );
 

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.ruijie_lin_42.storage_management_system_backend.stock_adjustment_history.mapper.ItemStockHistoryMapper">
+
+    <select id="queryItemStockHistoryByAdjustmentId" resultType="io.github.ruijie_lin_42.storage_management_system_backend.stock_adjustment_history.vo.ItemStockHistoryVo">
+        SELECT
+            item_stock_history.id AS id,
+            item_info.id AS itemId,
+            item_info.name AS itemName,
+            item_stock_history.stock_before AS stockBefore,
+            item_stock_history.amount_change AS amountChange,
+            item_stock_history.stock_after AS stockAfter
+        FROM item_stock_history
+        LEFT JOIN item_info ON item_stock_history.item_id = item_info.id
+        <where>
+            item_stock_history.adjustment_id = #{adjustmentId}
+            <if test="itemName != null and itemName != ''">
+                AND item_info.name LIKE CONCAT('%', #{itemName}, '%')
+            </if>
+        </where>
+    </select>
+
+    <select id="queryItemStockHistoryByItemId" resultType="io.github.ruijie_lin_42.storage_management_system_backend.stock_adjustment_history.vo.ItemStockHistoryDetailVo">
+        SELECT
+            item_stock_history.id AS id,
+            item_stock_history.adjustment_id AS adjustmentId,
+            item_stock_history.stock_before AS stockBefore,
+            item_stock_history.amount_change AS amountChange,
+            item_stock_history.stock_after AS stockAfter,
+            storage.name AS storageName,
+            stock_adjustment_history.created_at AS adjustmentTime,
+            user.name AS operatorName,
+            stock_adjustment_history.type AS type,
+            stock_adjustment_history.amount AS amount,
+            stock_adjustment_history.remark AS remark
+        FROM item_stock_history
+        LEFT JOIN stock_adjustment_history ON item_stock_history.adjustment_id = stock_adjustment_history.id
+        LEFT JOIN storage ON stock_adjustment_history.storage_id = storage.id
+        LEFT JOIN user ON stock_adjustment_history.created_by = user.id
+        WHERE item_stock_history.item_id = #{itemId}
+        ORDER BY stock_adjustment_history.created_at DESC, stock_adjustment_history.id DESC
+    </select>
+
+    <insert id="insertItemStockHistory">
+        INSERT INTO item_stock_history (adjustment_id, item_id, stock_before, amount_change, stock_after)
+        VALUES (#{adjustmentId}, #{itemId}, #{stockBefore}, #{amountChange}, #{stockAfter})
+    </insert>
+
+</mapper>

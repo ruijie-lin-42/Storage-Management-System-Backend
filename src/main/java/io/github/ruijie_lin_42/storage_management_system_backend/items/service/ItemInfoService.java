@@ -41,4 +41,14 @@ public class ItemInfoService extends ServiceImpl<ItemInfoMapper, ItemInfo> {
         return PageConverter.convert(result, Function.identity());
     }
 
+    public Integer getPageNumByItemId(Long itemId, Integer pageSize) {
+        ItemInfo itemInfo = itemInfoMapper.selectById(itemId);
+        if (itemInfo == null) {
+            return null;
+        }
+        Integer rank = itemInfoMapper.selectRankByItemId(itemId);
+        return (rank / pageSize) + 1;
+    }
+
+
 }

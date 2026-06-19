@@ -37,6 +37,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataAccessException.class)
     public Result<Void> handleDataAccessException(DataAccessException e){
+        e.printStackTrace();
         return Result.fail(ResultCode.DATABASE_CONNECTION_FAILED);
     }
 

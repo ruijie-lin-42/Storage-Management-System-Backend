@@ -31,4 +31,8 @@ public interface ItemInfoMapper extends BaseMapper<ItemInfo> {
             @Param("storageId") Long storageId
     );
 
+    public Integer selectRankByItemId(
+            @Param("itemId") Long itemId
+    );
+
 }
