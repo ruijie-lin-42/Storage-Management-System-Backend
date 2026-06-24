@@ -5,7 +5,8 @@ import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptio
 import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.DataIntegrityException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.vo.PageResultVo;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.dto.CreateUserDTO;
-import io.github.ruijie_lin_42.storage_management_system_backend.user.dto.EditUserDTO;
+import io.github.ruijie_lin_42.storage_management_system_backend.user.dto.DashboardEditUserDTO;
+import io.github.ruijie_lin_42.storage_management_system_backend.user.dto.ProfileEditUserDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.dto.UserQueryDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.service.UserService;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.vo.UserVo;
@@ -51,13 +52,25 @@ public class UserController {
         return userService.queryInPage(userQueryDTO);
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/dashboard/{id}")
     @Operation(description = "edit user using their id")
-    public Void updateById(@RequestBody @Valid EditUserDTO user, @PathVariable Long id) {
+    public Void updateById(@RequestBody @Valid DashboardEditUserDTO user, @PathVariable Long id) {
         int affectedNumRows = userService.editById(user, id);
         if(affectedNumRows == 0){
             throw new ApiException(ResultCode.USER_UNAVAILABLE);
         }else if(affectedNumRows > 1){
+            throw new DataIntegrityException(ResultCode.UPDATE_AFFECTED_ROWS_INVALID);
+        }
+        return null;
+    }
+
+    @PatchMapping("/profile/{id}")
+    @Operation(description = "edit user info using their id (edit info in profile page)")
+    public Void updateById(@RequestBody @Valid ProfileEditUserDTO profileEditUserDTO, @PathVariable Long id){
+        int affectedRows = userService.editUserInfoById(profileEditUserDTO, id);
+        if(affectedRows == 0){
+            throw new ApiException(ResultCode.USER_UNAVAILABLE);
+        }else if(affectedRows > 1){
             throw new DataIntegrityException(ResultCode.UPDATE_AFFECTED_ROWS_INVALID);
         }
         return null;

@@ -12,24 +12,29 @@ create table if not exists user
     password   varchar(255)         not null comment 'password',
     age        int                  not null comment 'age',
     gender     varchar(20)          not null comment 'gender: male, female, others',
-    email      varchar(254)         not null comment 'e-mail',
+    email      varchar(255)         not null comment 'e-mail',
     role       varchar(20)          not null comment 'role: SUPER_ADMIN, ADMIN, USER',
     status     varchar(20)          not null comment 'status: VALID, BANNED',
     is_deleted tinyint(1) default 0 not null comment 'if user is deleted',
     constraint username
         unique (username),
-    check (`age` > 0)
+    constraint age_positive
+        check (`age` > 0),
+    constraint role_enum_value
+        check (`role` in ('SUPER_ADMIN','ADMIN','USER','UNKNOWN')),
+	constraint status_enum_value
+		check (`status` in ('VALID','BANNED'))
 );
 
 -- refresh token
-create table if not exists refresh_token
+create table refresh_token
 (
     id         bigint auto_increment comment 'id'
         primary key,
-    user_id    bigint     not null comment 'user id',
-    token_hash char(64)   not null comment 'hashed token',
-    expiration datetime   not null comment 'when the token expires',
-    revoked    tinyint(1) not null comment 'whether the token is revoked',
+    user_id    bigint    not null comment 'user id',
+    token_hash char(64)  not null comment 'hashed token',
+    expiration timestamp not null comment 'when the token expires',
+    revoked_at timestamp null comment 'when the refresh token is revoked',
     constraint token_hash
         unique (token_hash),
     constraint fk_refresh_token_user

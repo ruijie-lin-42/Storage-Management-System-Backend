@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Getter
@@ -17,7 +18,7 @@ public class RefreshToken {
     private Long id;
     private Long userId;
     private String tokenHash;
-    private LocalDateTime expiration;
-    private boolean revoked;
+    private Instant expiration;
+    private Instant revokedAt;
 
 }

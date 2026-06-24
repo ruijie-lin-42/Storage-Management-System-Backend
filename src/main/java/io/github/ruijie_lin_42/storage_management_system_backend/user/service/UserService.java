@@ -1,18 +1,21 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.user.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.ruijie_lin_42.storage_management_system_backend.auth.dto.UserAuthDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Status;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.vo.PageResultVo;
+import io.github.ruijie_lin_42.storage_management_system_backend.user.convert.UserConverter;
+import io.github.ruijie_lin_42.storage_management_system_backend.user.dto.ProfileEditUserDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.entity.User;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.mapper.UserMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.dto.CreateUserDTO;
-import io.github.ruijie_lin_42.storage_management_system_backend.user.dto.EditUserDTO;
+import io.github.ruijie_lin_42.storage_management_system_backend.user.dto.DashboardEditUserDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.dto.UserQueryDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.vo.UserVo;
-import org.springframework.context.annotation.Primary;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,16 +28,12 @@ import org.springframework.stereotype.Service;
  * @since 2026-05-24
  */
 @Service
-@Primary
+@RequiredArgsConstructor
 public class UserService extends ServiceImpl<UserMapper, User> {
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-
-    public UserService(UserMapper userMapper, PasswordEncoder passwordEncoder) {
-        this.userMapper = userMapper;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final UserConverter userConverter;
 
     public int register(CreateUserDTO dto) {
         User user = new User();
@@ -49,7 +48,7 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         return userMapper.insert(user);
     }
 
-    public int editById(EditUserDTO dto, Long id) {
+    public int editById(DashboardEditUserDTO dto, Long id) {
         User user = new User();
         user.setId(id);
         user.setName(dto.getName());
@@ -59,6 +58,11 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         return userMapper.update(user, new LambdaQueryWrapper<User>()
                 .eq(User::getId, user.getId())
                 .eq(User::getIsDeleted, false));
+    }
+
+    public int editUserInfoById(ProfileEditUserDTO profileEditUserDTO, Long id) {
+        User user = userConverter.toEntity(profileEditUserDTO, id);
+        return userMapper.updateById(user);
     }
 
     public int removeById(Long id) {
@@ -82,11 +86,11 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         return userVoPage;
     }
 
-    public UserAuthDTO findAuthInfoByUsername(String username){
+    public UserAuthDTO findAuthInfoByUsername(String username) {
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(User::getUsername, username);
         User user = userMapper.selectOne(lambdaQueryWrapper);
-        if(user == null){
+        if (user == null) {
             return null;
         }
         UserAuthDTO userAuthDTO = new UserAuthDTO();
@@ -96,25 +100,20 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         return userAuthDTO;
     }
 
-    public UserAuthDTO findAuthInfoByUserId(Long userId){
-        User user = userMapper.selectById(userId);
-        if(user == null){
-            return null;
-        }
-        UserAuthDTO userAuthDTO = new UserAuthDTO();
-        userAuthDTO.setUserId(user.getId());
-        userAuthDTO.setPasswordHash(user.getPassword());
-        userAuthDTO.setRole(user.getRole());
-        return userAuthDTO;
-    }
-
-    public UserVo findByUserId(Long userId){
+    public UserVo findByUserId(Long userId) {
         return userToVo(userMapper.selectById(userId));
+    }
+
+    public Integer changePassword(UserAuthDTO user, String newPassword) {
+        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("id", user.getUserId())
+                .set("password", passwordEncoder.encode(newPassword));
+        return userMapper.update(updateWrapper);
     }
 
     // helper function
     private UserVo userToVo(User user) {
-        if(user == null){
+        if (user == null) {
             return null;
         }
         UserVo userVo = new UserVo();

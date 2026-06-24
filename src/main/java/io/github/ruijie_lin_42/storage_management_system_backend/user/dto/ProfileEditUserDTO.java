@@ -6,7 +6,7 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data
-public class CreateUserDTO {
+public class ProfileEditUserDTO {
 
     @NotNull
     @NotBlank
@@ -17,10 +17,6 @@ public class CreateUserDTO {
     @Size(min = UserConstraints.NAME_LENGTH_MIN, max = UserConstraints.NAME_LENGTH_MAX)
     private String name;
     @NotNull
-    @NotBlank
-    @Size(min = UserConstraints.PASSWORD_LENGTH_MIN, max = UserConstraints.PASSWORD_LENGTH_MAX)
-    private String password;
-    @NotNull
     @Min(UserConstraints.AGE_MIN)
     @Max(UserConstraints.AGE_MAX)
     private Integer age;
@@ -30,10 +26,9 @@ public class CreateUserDTO {
     private String gender;
     @NotNull
     @NotBlank
-    @Email
     @Size(max = UserConstraints.EMAIL_LENGTH_MAX)
     private String email;
     @NotNull
-    @Size(min = UserConstraints.ROLE_LENGTH_MIN, max = UserConstraints.ROLE_LENGTH_MAX)
     private Role role;
+
 }

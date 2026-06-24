@@ -13,6 +13,8 @@ spring:
       connection-timeout: 5000
       idle-timeout: 0
       max-lifetime: 18000000
+  jackson:
+    time-zone: UTC
 server:
   port: 8090
 jwt:

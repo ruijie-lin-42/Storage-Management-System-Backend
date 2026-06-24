@@ -1,25 +1,16 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.user.dto;
 
-import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Role;
 import io.github.ruijie_lin_42.storage_management_system_backend.user.constants.UserConstraints;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data
-public class CreateUserDTO {
+public class DashboardEditUserDTO {
 
-    @NotNull
-    @NotBlank
-    @Size(min = UserConstraints.USERNAME_LENGTH_MIN, max = UserConstraints.USERNAME_LENGTH_MAX)
-    private String username;
     @NotNull
     @NotBlank
     @Size(min = UserConstraints.NAME_LENGTH_MIN, max = UserConstraints.NAME_LENGTH_MAX)
     private String name;
-    @NotNull
-    @NotBlank
-    @Size(min = UserConstraints.PASSWORD_LENGTH_MIN, max = UserConstraints.PASSWORD_LENGTH_MAX)
-    private String password;
     @NotNull
     @Min(UserConstraints.AGE_MIN)
     @Max(UserConstraints.AGE_MAX)
@@ -33,7 +24,4 @@ public class CreateUserDTO {
     @Email
     @Size(max = UserConstraints.EMAIL_LENGTH_MAX)
     private String email;
-    @NotNull
-    @Size(min = UserConstraints.ROLE_LENGTH_MIN, max = UserConstraints.ROLE_LENGTH_MAX)
-    private Role role;
 }
