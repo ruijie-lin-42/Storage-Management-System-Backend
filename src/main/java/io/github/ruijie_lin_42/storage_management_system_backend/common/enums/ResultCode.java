@@ -5,64 +5,64 @@ import lombok.Getter;
 @Getter
 public enum ResultCode {
 
-    // 2xx成功
-    // 3xx重定向
-    // 4xx客户端错误
-    // 5xx服务端错误
-    // Defaults
-    SUCCESS(0, "success"),
-    PARAM_ERROR(400, "parameter error"),
-    UNAUTHORIZED(401, "unauthorized"),
-    FORBIDDEN(403, "forbidden"),
-    NOT_FOUND(404, "not found"),
-    SYSTEM_ERROR(500, "system error"),
+    // success
+    SUCCESS(0, "Success"),
 
-    // TODO: add custom result codes here
+    // =========================== CUSTOM ERROR CODE PATTERN ===========================
+    // xxx xx xxx -> http code | module | error number
+    // http code -> classification
+    // module -> separate error origin
+    // error number -> represents exact error
 
-    /**
-     * 1xxx client error
-     */
+    // =========================== 99 COMMON ERROR CODE ===========================
+    // | 400... | BAD_REQUEST |
+    PARAM_ERROR(40099001, "Parameter error"),
+    JSON_SYNTAX_ERROR(40099002, "JSON syntax error"),
+    ARGUMENT_TYPE_MISMATCH(40099003, "Unexpected parameter type"),
+    ARGUMENT_NOT_VALID(40099004, "Argument contains invalid values"),
+    // | 401... | UNAUTHORIZED |
+    UNAUTHORIZED(40199001, "Unauthorized"),
+    // | 403... | FORBIDDEN |
+    FORBIDDEN(40399001, "Forbidden"),
+    // | 404... | NOT_FOUND |
+    NOT_FOUND(40499001, "Not found"),
+    // | 409... | CONFLICT |
+    CONFLICT(40999001, "Resource duplicated"),
+    // | 500... | INTERNAL_SERVER_ERROR |
+    SYSTEM_ERROR(50099001, "System error, please try again later"),
+    DATABASE_CONNECTION_FAILED(50099002, "system busy, please try again later"),
+    INSERT_AFFECTED_ROWS_INVALID(50099003, "System error, please try again later"),
+    UPDATE_AFFECTED_ROWS_INVALID(50099004, "System error, please try again later"),
+    DELETE_AFFECTED_ROWS_INVALID(50099005, "System error, please try again later"),
+    UNKNOWN_ERROR(50099999, "System encounters an unexpected exception, please contact support and try later"),
 
-    // 11xx request parameter error
-    JSON_SYNTAX_ERROR(1101, "JSON syntax error"),
-    ARGUMENT_TYPE_MISMATCH(1102, "unexpected parameter type"),
-    ARGUMENT_NOT_VALID(1103, "argument contains invalid values"),
+    // =========================== 01 USER MODULE ===========================
+    // | 404... | NOT_FOUND |
+    USER_UNAVAILABLE(40401001, "Requested user unavailable"),
+    // | 409... | CONFLICT |
+    DUPLICATE_USERNAME(40901001, "Username already exists"),
 
-    /**
-     * 2xxx business error
-     */
+    // =========================== 02 AUTH MODULE ===========================
+    // | 400... | BAD_REQUEST |
+    LOGIN_FAIL(40002001, "Username or password incorrect"),
+    // | 401... | UNAUTHORIZED |
+    INVALID_TOKEN(40102001, "Token invalid"),
+    // | 404... | NOT_FOUND |
+    USER_NOT_FOUND(40402001, "User not found"),
 
-    // 21xx user exception
-    DUPLICATE_USERNAME(2101, "username already exists"),
-    USER_UNAVAILABLE(2102, "requested user unavailable"),
+    // =========================== 03 STORAGE MODULE ===========================
+    // | 404... | NOT_FOUND |
+    STORAGE_UNAVAILABLE(40403001, "Requested storage unavailable"),
+    // | 409... | CONFLICT |
+    DUPLICATE_STORAGE_NAME(40903001, "Storage name already exists"),
 
-    // 22xx auth exception
-    // 221x user authentication invalid
-    LOGIN_FAIL(2201, "username or password incorrect"),
-    USER_NOT_FOUND(2202, "user not found"),
-    // 222x token invalid
-    INVALID_TOKEN(2203, "token invalid"),
-
-    // 23xx storage exception
-    DUPLICATE_STORAGE_NAME(2301, "storage name already exists"),
-    STORAGE_UNAVAILABLE(2302, "requested storage unavailable"),
-
-    // 24xx items exception
-    INVALID_INCREMENT(2401, "increment of stock invalid"),
-    INVALID_DECREMENT(2402, "decrement of stock invalid"),
-    INVALID_ITEM_STOCK(2403, "item does not have enough stock or doesn't exist"),
-
-    // 29xx database integrity exception
-    INSERT_AFFECTED_ROWS_INVALID(2901, "insert failed, affected multiple rows"),
-    UPDATE_AFFECTED_ROWS_INVALID(2902, "update failed, affected multiple rows"),
-    DELETE_AFFECTED_ROWS_INVALID(2903, "delete failed, affected multiple rows"),
-
-    /**
-     * 3xxx system error
-     */
-
-    // 31xx database exception
-    DATABASE_CONNECTION_FAILED(3101, "system busy, please try later"),
+    // =========================== 04 ITEMS MODULE ===========================
+    // | 400... | BAD_REQUEST |
+    INVALID_INCREMENT(40004001, "Increment of stock invalid"),
+    INVALID_DECREMENT(40004002, "Decrement of stock invalid"),
+    INVALID_ITEM_STOCK(40004003, "Item does not have enough stock"),
+    // | 404... | NOT_FOUND
+    ITEM_NOT_FOUND(40404001, "Item does not exist"),
 
     ;
 
