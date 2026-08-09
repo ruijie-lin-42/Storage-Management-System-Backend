@@ -1,5 +1,8 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.common.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum ResultCode {
 
     // 2xx成功
@@ -71,11 +74,4 @@ public enum ResultCode {
         this.message = message;
     }
 
-    public int getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
 }

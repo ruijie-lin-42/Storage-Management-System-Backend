@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="io.github.ruijie_lin_42.storage_management_system_backend.items.mapper.ItemInfoMapper">
-    <select id="getItemInfo" resultType="io.github.ruijie_lin_42.storage_management_system_backend.items.vo.ItemInfoDetailVo">
+<mapper namespace="io.github.ruijie_lin_42.storage_management_system_backend.modules.items.mapper.ItemInfoMapper">
+    <select id="getItemInfo" resultType="io.github.ruijie_lin_42.storage_management_system_backend.modules.items.model.response.ItemInfoDetailResponse">
         SELECT
             item_info.id,
             item_info.name,
@@ -22,7 +22,7 @@
         </where>
     </select>
 
-    <select id="getStorageItemInfo" resultType="io.github.ruijie_lin_42.storage_management_system_backend.items.vo.StorageItemInfoVo">
+    <select id="getStorageItemInfo" resultType="io.github.ruijie_lin_42.storage_management_system_backend.modules.items.model.response.StorageItemInfoResponse">
         SELECT
             item_info.id,
             item_info.name,

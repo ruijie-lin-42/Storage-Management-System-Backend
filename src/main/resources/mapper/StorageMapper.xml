@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="io.github.ruijie_lin_42.storage_management_system_backend.storage.mapper.StorageMapper">
-    <select id="selectStorageDetailByName" resultType="io.github.ruijie_lin_42.storage_management_system_backend.storage.vo.StorageVo">
+<mapper namespace="io.github.ruijie_lin_42.storage_management_system_backend.modules.storage.mapper.StorageMapper">
+    <select id="selectStorageDetailByName" resultType="io.github.ruijie_lin_42.storage_management_system_backend.modules.storage.model.response.StorageResponse">
         SELECT
             storage.id,
             storage.name,
@@ -21,7 +21,7 @@
             <if test="keyword != null and keyword != ''">
                 storage.name LIKE CONCAT('%', #{keyword}, '%')
             </if>
-            AND storage.is_deleted = 0
+            AND storage.deleted_at is null
         </where>
     </select>
 </mapper>

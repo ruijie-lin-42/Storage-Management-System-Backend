@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -37,12 +36,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataAccessException.class)
     public Result<Void> handleDataAccessException(DataAccessException e){
+        // TODO: change to formal loggers
         e.printStackTrace();
         return Result.fail(ResultCode.DATABASE_CONNECTION_FAILED);
     }
 
     @ExceptionHandler(Exception.class)
     public Result<Void> handleException(Exception e) {
+        // TODO: change to formal loggers
         e.printStackTrace();
         return Result.fail(ResultCode.SYSTEM_ERROR);
     }

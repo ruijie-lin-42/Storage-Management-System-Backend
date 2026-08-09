@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_history.mapper.StockHistoryMapper">
+
+    <select id="selectStockHistoryByStorageName" resultType="io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_history.model.response.StockHistoryResponse">
+        SELECT
+            stock_history.id AS id,
+            storage.id AS storageId,
+            storage.name AS storageName,
+            user.name AS createdBy,
+            stock_history.created_at AS createdAt,
+            stock_history.type AS type,
+            stock_history.amount AS amount,
+            stock_history.remark AS remark
+        FROM stock_history
+        LEFT JOIN storage ON stock_history.storage_id = storage.id
+        LEFT JOIN user ON stock_history.created_by = user.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                storage.name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        ORDER BY stock_history.created_at DESC, stock_history.id DESC
+    </select>
+
+    <select id="selectRankById" resultType="int">
+        SELECT COUNT(*)
+        FROM stock_history
+        WHERE created_at > #{createdAt}
+            OR (created_at > #{createdAt} AND id > #{stockHistoryId})
+    </select>
+
+    <insert id="insertStockHistory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO stock_history (storage_id, created_by, created_at, type, amount, remark)
+        VALUES (#{storageId}, #{createdBy}, #{createdAt}, #{type}, #{amount}, #{remark})
+    </insert>
+
+</mapper>

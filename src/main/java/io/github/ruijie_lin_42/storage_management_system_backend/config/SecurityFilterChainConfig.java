@@ -1,12 +1,13 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.config;
 
-import io.github.ruijie_lin_42.storage_management_system_backend.auth.filter.JwtFilter;
-import io.github.ruijie_lin_42.storage_management_system_backend.auth.service.JwtService;
+import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.filter.JwtFilter;
+import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.service.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -30,7 +31,7 @@ public class SecurityFilterChainConfig {
                 .sessionManagement(httpSecuritySessionManagementConfigurer ->
                         httpSecuritySessionManagementConfigurer
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .csrf(httpSecurityCsrfConfigurer -> httpSecurityCsrfConfigurer.disable())
+                .csrf(CsrfConfigurer<HttpSecurity>::disable)
                 .addFilterBefore(new JwtFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(httpSecurityExceptionHandlingConfigurer ->
                         httpSecurityExceptionHandlingConfigurer

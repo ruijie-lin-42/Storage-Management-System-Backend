@@ -15,7 +15,7 @@ create table if not exists user
     email      varchar(255)         not null comment 'e-mail',
     role       varchar(20)          not null comment 'role: SUPER_ADMIN, ADMIN, USER',
     status     varchar(20)          not null comment 'status: VALID, BANNED',
-    is_deleted tinyint(1) default 0 not null comment 'if user is deleted',
+    deleted_at timestamp    null comment 'when the user is deleted, null if not deleted',
     constraint username
         unique (username),
     constraint age_positive
@@ -79,12 +79,12 @@ create table if not exists storage
     name       varchar(100)         not null comment 'storage name',
     address    varchar(200)         not null comment 'location',
     manager_id bigint               not null comment 'person in charge, should not be user-level',
-    created_at datetime             not null comment 'when the storage is created',
-    created_by bigint               not null comment 'person who created the storage',
-    updated_at datetime             null comment 'the last update time of the storage',
-    updated_by bigint               null comment 'the last person updated the storage',
-    remark     varchar(150)         null comment 'remark',
-    is_deleted tinyint(1) default 0 not null comment 'whether the storage is deleted',
+    created_at timestamp    not null comment 'when the storage is created',
+    created_by bigint       not null comment 'person who created the storage',
+    updated_at timestamp    not null comment 'the last update time of the storage',
+    updated_by bigint       null comment 'the last person updated the storage',
+    remark     varchar(150) null comment 'remark',
+    deleted_at timestamp    null comment 'when the storage is deleted, null if not deleted',
     constraint name
         unique (name),
     constraint fk_storage_created_by
@@ -112,13 +112,13 @@ create table if not exists items
 );
 
 -- stock adjustment history
-create table if not exists stock_adjustment_history
+create table if not exists stock_history
 (
     id         bigint auto_increment comment 'id'
         primary key,
     storage_id bigint       not null comment 'the storage the adjustment happened (id)',
     created_by bigint       not null comment 'who created this adjustment (id)',
-    created_at datetime     not null comment 'when is this adjustment created',
+    created_at timestamp    not null comment 'when is this adjustment created',
     type       varchar(20)  not null comment 'the type of transaction',
     amount     int          not null comment 'the number of items changed',
     remark     varchar(150) not null comment 'reason',
@@ -131,13 +131,13 @@ create table if not exists stock_adjustment_history
 -- stock change history for each item
 create table if not exists item_stock_history
 (
-    id            bigint auto_increment comment 'id'
+    id               bigint auto_increment comment 'id'
         primary key,
-    adjustment_id bigint not null comment 'which adjustment did the stock change happened',
-    item_id       bigint not null comment 'which item is being changed (id)',
-    stock_before  int    not null comment 'the stock before the change',
-    amount_change int    not null comment 'the amount of stock being changed',
-    stock_after   int    not null comment 'the stock after the change',
+    stock_history_id bigint not null comment 'which adjustment did the stock change happened',
+    item_id          bigint not null comment 'which item is being changed (id)',
+    stock_before     int    not null comment 'the stock before the change',
+    amount_change    int    not null comment 'the amount of stock being changed',
+    stock_after      int    not null comment 'the stock after the change',
     constraint fk_item_stock_history_item_id
         foreign key (item_id) references item_info (id),
     constraint fk_item_stock_history_stock_adjustment_history

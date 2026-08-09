@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="io.github.ruijie_lin_42.storage_management_system_backend.items.mapper.ItemsMapper">
-    <select id="selectItemsDetail" resultType="io.github.ruijie_lin_42.storage_management_system_backend.items.vo.ItemsVo">
+<mapper namespace="io.github.ruijie_lin_42.storage_management_system_backend.modules.items.mapper.ItemsMapper">
+    <select id="selectItemsDetail" resultType="io.github.ruijie_lin_42.storage_management_system_backend.modules.items.model.response.ItemsResponse">
         SELECT
             items.id,
             item_info.name,
@@ -24,7 +24,7 @@
             </if>
         </where>
     </select>
-    <select id="selectForUpdate" resultType="io.github.ruijie_lin_42.storage_management_system_backend.items.entity.Items">
+    <select id="selectForUpdate" resultType="io.github.ruijie_lin_42.storage_management_system_backend.modules.items.model.entity.Items">
         SELECT *
         FROM items
         WHERE item_id = #{itemId} and storage_id = #{storageId}
