@@ -1,12 +1,17 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.response;
 
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.response.UserQueryResponse;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
+@Schema(description = "Response for login requests")
 public class AuthResponse {
 
+    @Schema(description = "The access token that is being given to the user", example = "jwt.userinfo.sign")
     private String accessToken;
+
+    @Schema(description = "User info")
     private UserQueryResponse user;
 
 }

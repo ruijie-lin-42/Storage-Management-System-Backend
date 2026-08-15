@@ -1,6 +1,7 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.modules.items.model.request;
 
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.items.constants.StockChangeConstraints;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,9 +11,11 @@ import lombok.Data;
 import java.util.List;
 
 @Data
+@Schema(description = "Change items' stock counts in a storage request")
 public class ItemsStockChangeRequest {
 
     @NotNull
+    @Schema(description = "storage's id, which items' stock in it is being changed", example = "1")
     private Long storageId;
 
     @NotNull
@@ -23,6 +26,7 @@ public class ItemsStockChangeRequest {
     @NotNull
     @NotBlank
     @Size(min = StockChangeConstraints.REMARK_LENGTH_MIN, max = StockChangeConstraints.REMARK_LENGTH_MAX)
+    @Schema(description = "This stock change operation's remark", example = "3 headphones are sold")
     private String remark;
 
 }

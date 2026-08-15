@@ -1,5 +1,8 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.controller;
 
+import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.ApiErrorResponseExample;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.CommonErrorApiResponses;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.RequiresAuthApiResponses;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.request.ResetPasswordRequest;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.request.VerifyPasswordRequest;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.response.AuthResponse;
@@ -13,6 +16,9 @@ import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Re
 import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.result.Result;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.response.UserQueryResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -29,6 +35,7 @@ import java.util.Arrays;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "Authentication", description = "Endpoints for authenticating")
 public class AuthController {
 
     private final AuthService authService;
@@ -36,6 +43,16 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/login")
+    @Operation(summary = "User login",
+            description = """
+                    Checks username and password;\s\s
+                    Will set refresh token in http-Only cookie, and give access token in response body if succeeded;\s\s
+                    Users with any role could login""")
+    @ApiResponse(responseCode = "200", description = "User login succeeded")
+    @ApiResponse(responseCode = "401", description = "User login failed")
+    @ApiErrorResponseExample(responseCode = "401", resultCode = ResultCode.LOGIN_FAIL)
+    @CommonErrorApiResponses
+    // TODO: change return value from ResponseEntity to AuthResponse, set SET-COOKIE using HttpServletResponse instead
     public ResponseEntity<Result<AuthResponse>> login(@RequestBody LoginRequest loginRequest) {
         UserAuthDTO user = authService.login(loginRequest);
         String accessToken = jwtService.getToken(user.getUserId(), user.getRole());
@@ -58,6 +75,14 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    @Operation(summary = "User logout",
+            description = """
+                    Revoke user authentication info;\s\s
+                    Idempotent operation, always returns a success response without throwing errors on repeated calls;\s\s
+                    User with any role could logout""")
+    @ApiResponse(responseCode = "200", description = "User logout succeeded")
+    @CommonErrorApiResponses
+    @RequiresAuthApiResponses
     public Void logout(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if(cookies == null){
@@ -76,6 +101,14 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
+    @Operation(summary = "Refresh access token",
+            description = """
+                    Gives a new valid access token if request holds valid refresh token;\s\s
+                    User with any role could refresh""")
+    @ApiResponse(responseCode = "200", description = "Access token refreshed, new token sent to user")
+    @ApiResponse(responseCode = "401", description = "User does not hold valid refresh token")
+    @ApiErrorResponseExample(responseCode = "401", resultCode = ResultCode.INVALID_TOKEN)
+    @CommonErrorApiResponses
     public RefreshResponse refresh(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
@@ -93,6 +126,14 @@ public class AuthController {
     }
 
     @GetMapping("/me")
+    @Operation(summary = "Get current user's info",
+            description = """
+                    Get users' own info, where the user must be currently logged in;\s\s
+                    Should only be used on login and profile page;\s\s
+                    Users with any role could get their own info""")
+    @ApiResponse(responseCode = "200", description = "Current user's info sent successfully")
+    @CommonErrorApiResponses
+    @RequiresAuthApiResponses
     public UserQueryResponse me() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = (Long) authentication.getPrincipal();
@@ -100,11 +141,30 @@ public class AuthController {
     }
 
     @PostMapping("/verifyPassword")
+    @Operation(summary = "Verify whether given username corresponds to given password",
+            description = """
+                    This verification only happens when the user wants to change their password after they logs in;\s\s
+                    Requires current user to be logged in;\s\s
+                    Users with any role could verify their password;\s\s
+                    Should always return true or false without throwing exceptions, where false could mean user not found or password not correct""")
+    @ApiResponse(responseCode = "200", description = "The result of if the verification passes is sent through response")
+    @CommonErrorApiResponses
+    @RequiresAuthApiResponses
     public Boolean verifyPassword(@RequestBody @Valid VerifyPasswordRequest verifyPasswordRequest){
         return authService.verifyPassword(verifyPasswordRequest);
     }
 
     @PostMapping("/resetPassword")
+    @Operation(summary = "Reset a user's password",
+            description = """
+                    This reset only happens when user wants to change their password after they logged in and passes the password verification step;\s\s
+                    Requires current user to be logged in;\s\s
+                    Users with any role could reset their password;\s\s
+                    Would check old password again, if old password not correct then reset would fail;\s\s
+                    Should always return true or false without throwing exceptions, false could mean user not found or old password incorrect""")
+    @ApiResponse(responseCode = "200", description = "Password reset succeeded")
+    @CommonErrorApiResponses
+    @RequiresAuthApiResponses
     public Boolean resetPassword(@RequestBody @Valid ResetPasswordRequest resetPasswordRequest){
         return authService.resetPassword(resetPasswordRequest);
     }
