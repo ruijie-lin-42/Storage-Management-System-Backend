@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.converter.PageConverter;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.StockAdjustmentType;
-import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.ApiException;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.BusinessException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.DataIntegrityException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.utils.SecurityUtils;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.response.PageResultResponse;
@@ -58,7 +58,7 @@ public class ItemsService extends ServiceImpl<ItemsMapper, Items> {
             Items item = itemsMapper.selectForUpdate(stockChangeRequest.getItemId(), storageId);
             if (item == null) {
                 if (stockChangeRequest.getChange() < 0) {
-                    throw new ApiException(ResultCode.INVALID_ITEM_STOCK);
+                    throw new BusinessException(ResultCode.INVALID_ITEM_STOCK);
                 }
                 affectedRows = itemsMapper.insertItem(stockChangeRequest.getItemId(), storageId, stockChangeRequest.getChange());
                 if(affectedRows > 1 || affectedRows < 0){
@@ -67,7 +67,7 @@ public class ItemsService extends ServiceImpl<ItemsMapper, Items> {
             } else {
                 int newCount = item.getCount() + stockChangeRequest.getChange();
                 if (newCount < 0) {
-                    throw new ApiException(ResultCode.INVALID_ITEM_STOCK);
+                    throw new BusinessException(ResultCode.INVALID_ITEM_STOCK);
                 }
                 affectedRows = itemsMapper.updateItemCount(stockChangeRequest.getItemId(), storageId, newCount);
                 if(affectedRows > 1 || affectedRows < 0){

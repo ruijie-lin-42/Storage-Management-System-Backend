@@ -1,7 +1,7 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.modules.storage.controller;
 
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
-import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.ApiException;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.BusinessException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.DataIntegrityException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.ApiErrorResponseExample;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.CommonErrorApiResponses;
@@ -22,8 +22,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import javax.swing.*;
 
 /**
  * <p>
@@ -60,7 +58,7 @@ public class StorageController {
                 throw new DataIntegrityException(ResultCode.INSERT_AFFECTED_ROWS_INVALID);
             }
         } catch (DuplicateKeyException e) {
-            throw new ApiException(ResultCode.DUPLICATE_STORAGE_NAME);
+            throw new BusinessException(ResultCode.DUPLICATE_STORAGE_NAME);
         }
         return null;
     }
@@ -95,7 +93,7 @@ public class StorageController {
     public Void updateStorageById(@RequestBody @Valid EditStorageRequest storage, @PathVariable Long id) {
         int affectedNumRows = storageService.editById(storage, id);
         if (affectedNumRows == 0) {
-            throw new ApiException(ResultCode.STORAGE_UNAVAILABLE);
+            throw new BusinessException(ResultCode.STORAGE_UNAVAILABLE);
         } else if (affectedNumRows > 1) {
             throw new DataIntegrityException(ResultCode.UPDATE_AFFECTED_ROWS_INVALID);
         }

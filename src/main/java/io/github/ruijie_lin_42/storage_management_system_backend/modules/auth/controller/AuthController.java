@@ -1,5 +1,6 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.controller;
 
+import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthenticationException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.ApiErrorResponseExample;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.CommonErrorApiResponses;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.RequiresAuthApiResponses;
@@ -13,7 +14,6 @@ import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.se
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.service.JwtService;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.service.RefreshTokenService;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
-import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -104,7 +104,7 @@ public class AuthController {
     public RefreshResponse refresh(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
-            throw new AuthException(ResultCode.INVALID_TOKEN);
+            throw new AuthenticationException(ResultCode.INVALID_TOKEN);
         }
         String refreshToken = Arrays.stream(cookies)
                 .filter(cookie -> cookie.getName().equals("refreshToken"))

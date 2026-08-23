@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Role;
-import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthException;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthorizationException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.utils.SecurityUtils;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.dto.UserAuthDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.converter.PageConverter;
@@ -47,7 +47,7 @@ public class UserService extends ServiceImpl<UserMapper, User> {
             User user = userConverter.toEntity(createUserRequest, passwordEncoder.encode((createUserRequest.getPassword())));
             return userMapper.insert(user);
         }else{
-            throw new AuthException(ResultCode.INSUFFICIENT_PRIVILEGE);
+            throw new AuthorizationException(ResultCode.INSUFFICIENT_PRIVILEGE);
         }
     }
 
@@ -61,7 +61,7 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         if(canOperate(operatorRole, target.getRole())) {
             return userMapper.update(user, lambdaUpdateWrapper);
         }else {
-            throw new AuthException(ResultCode.INSUFFICIENT_PRIVILEGE);
+            throw new AuthorizationException(ResultCode.INSUFFICIENT_PRIVILEGE);
         }
     }
 
@@ -84,7 +84,7 @@ public class UserService extends ServiceImpl<UserMapper, User> {
             user.setDeletedAt(Instant.now());
             return userMapper.updateById(user);
         }else {
-            throw new AuthException(ResultCode.INSUFFICIENT_PRIVILEGE);
+            throw new AuthorizationException(ResultCode.INSUFFICIENT_PRIVILEGE);
         }
     }
 

@@ -4,11 +4,11 @@ import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Re
 import lombok.Getter;
 
 @Getter
-public class AuthException extends CustomException{
+public class AuthorizationException extends CustomException {
 
     private final ResultCode code;
 
-    public AuthException(ResultCode resultCode){
+    public AuthorizationException(ResultCode resultCode) {
         super(resultCode);
         this.code = resultCode;
     }

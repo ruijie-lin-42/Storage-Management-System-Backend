@@ -3,13 +3,10 @@ package io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.s
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
-import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthException;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthenticationException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.DataIntegrityException;
-import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.dto.SecurityUser;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.entity.RefreshToken;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.mapper.RefreshTokenMapper;
-import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.response.UserQueryResponse;
-import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -61,21 +58,21 @@ public class RefreshTokenService {
         if (refreshToken != null) {
             RefreshToken token = this.getTokenByValue(refreshToken);
             if (token == null || token.getRevokedAt() != null) {
-                throw new AuthException(ResultCode.INVALID_TOKEN);
+                throw new AuthenticationException(ResultCode.INVALID_TOKEN);
             }
             if (token.getExpiration().isBefore(Instant.now())) {
                 this.revokeTokenByValueOnRefresh(refreshToken);
-                throw new AuthException(ResultCode.INVALID_TOKEN);
+                throw new AuthenticationException(ResultCode.INVALID_TOKEN);
             } else {
                 Long userId = token.getUserId();
                 UserDetails user = securityUserDetailsService.loadUserByUserId(userId);
                 if (user == null) {
-                    throw new AuthException(ResultCode.INVALID_TOKEN);
+                    throw new AuthenticationException(ResultCode.INVALID_TOKEN);
                 }
                 return jwtService.getToken(userId);
             }
         } else {
-            throw new AuthException(ResultCode.INVALID_TOKEN);
+            throw new AuthenticationException(ResultCode.INVALID_TOKEN);
         }
     }
 

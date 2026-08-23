@@ -1,7 +1,7 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.modules.user.controller;
 
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
-import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.ApiException;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.BusinessException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.DataIntegrityException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.ApiErrorResponseExample;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.CommonErrorApiResponses;
@@ -62,7 +62,7 @@ public class UserController {
                 throw new DataIntegrityException(ResultCode.INSERT_AFFECTED_ROWS_INVALID);
             }
         } catch (DuplicateKeyException e) {
-            throw new ApiException(ResultCode.DUPLICATE_USERNAME);
+            throw new BusinessException(ResultCode.DUPLICATE_USERNAME);
         }
         return null;
     }
@@ -98,7 +98,7 @@ public class UserController {
         int affectedNumRows = userService.dashboardEditUserById(user, id);
         // TODO: move logic to service methods
         if (affectedNumRows == 0) {
-            throw new ApiException(ResultCode.USER_UNAVAILABLE);
+            throw new BusinessException(ResultCode.USER_UNAVAILABLE);
         } else if (affectedNumRows > 1) {
             throw new DataIntegrityException(ResultCode.UPDATE_AFFECTED_ROWS_INVALID);
         }
@@ -121,7 +121,7 @@ public class UserController {
     public Void profileEditUser(@RequestBody @Valid ProfileEditUserRequest profileEditUserRequest, @PathVariable Long id) {
         int affectedRows = userService.profileEditUserById(profileEditUserRequest, id);
         if (affectedRows == 0) {
-            throw new ApiException(ResultCode.USER_UNAVAILABLE);
+            throw new BusinessException(ResultCode.USER_UNAVAILABLE);
         } else if (affectedRows > 1) {
             throw new DataIntegrityException(ResultCode.UPDATE_AFFECTED_ROWS_INVALID);
         }

@@ -1,11 +1,11 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.service;
 
+import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthenticationException;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.dto.SecurityUser;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.request.LoginRequest;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.request.ResetPasswordRequest;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.request.VerifyPasswordRequest;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
-import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,7 +24,7 @@ public class AuthService {
         if (verifyPassword(user, loginRequest.getPassword())) {
             return user;
         } else {
-            throw new AuthException(ResultCode.LOGIN_FAIL);
+            throw new AuthenticationException(ResultCode.LOGIN_FAIL);
         }
     }
 
@@ -50,7 +50,7 @@ public class AuthService {
 
     private boolean verifyPassword(UserDetails user, String password) {
         if (user == null) {
-            throw new AuthException(ResultCode.USER_NOT_FOUND);
+            throw new AuthenticationException(ResultCode.USER_NOT_FOUND);
         }
         if (password == null || password.isBlank()) {
             return false;
