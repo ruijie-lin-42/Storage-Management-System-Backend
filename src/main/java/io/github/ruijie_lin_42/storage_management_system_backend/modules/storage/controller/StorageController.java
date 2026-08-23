@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.swing.*;
@@ -41,9 +42,10 @@ public class StorageController {
     private final StorageService storageService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new storage",
             description = """
-                    Storage creation requires ADMIN role;\s\s
+                    No limitations on user roles;\s\s
                     See request body schema for required fields""")
     @ApiResponse(responseCode = "200", description = "Storage successfully created")
     @ApiResponse(responseCode = "409", description = "Storage name already exists, creation failed")
@@ -64,6 +66,7 @@ public class StorageController {
     }
 
     @PostMapping("/search")
+    @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Search for storages",
             description = """
                     Fuzzy search for storages;\s\s
@@ -77,6 +80,7 @@ public class StorageController {
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Edit storage info",
             description = """
                     Edit storage info via dashboard;\s\s
@@ -99,6 +103,7 @@ public class StorageController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete storage",
             description = """
                     Soft deletion: mark storage deleted as deleted instead of physical delete them;\s\s
@@ -117,6 +122,7 @@ public class StorageController {
     }
 
     @GetMapping("/exists")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Check if the storage's name already exists",
             description = """
                     Check whether storage name specified already exists;\s\s

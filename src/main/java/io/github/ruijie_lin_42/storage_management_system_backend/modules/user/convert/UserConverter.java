@@ -24,6 +24,7 @@ public interface UserConverter {
 
     @Mapping(target = "userId", source = "id")
     @Mapping(target = "passwordHash", source = "password")
+    @Mapping(target = "status", source = "status")
     UserAuthDTO toAutoDTO(User user);
 
 }

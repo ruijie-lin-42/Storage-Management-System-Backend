@@ -1,6 +1,5 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.service;
 
-import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -18,11 +17,10 @@ public class JwtService {
 
     private static final SecretKey KEY = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
 
-    public String getToken(Long userId, Role role){
+    public String getToken(Long userId){
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim("type", "access")
-                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
                 .signWith(KEY)
@@ -39,10 +37,6 @@ public class JwtService {
 
     public String getUserId(String token){
         return this.parseToken(token).getSubject();
-    }
-
-    public String getRole(String token){
-        return this.parseToken(token).get("role", String.class);
     }
 
     public boolean validate(String token){

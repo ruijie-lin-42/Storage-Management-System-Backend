@@ -1,14 +1,13 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.service;
 
+import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.dto.SecurityUser;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.request.LoginRequest;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.request.ResetPasswordRequest;
-import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.dto.UserAuthDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.request.VerifyPasswordRequest;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthException;
-import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.service.UserService;
-import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.response.UserQueryResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,12 +15,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserService userService;
+    private final SecurityUserDetailsService securityUserDetailsService;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
 
-    public UserAuthDTO login(LoginRequest loginRequest) {
-        UserAuthDTO user = userService.findAuthInfoByUsername(loginRequest.getUsername());
+    public SecurityUser login(LoginRequest loginRequest) {
+        SecurityUser user = (SecurityUser) securityUserDetailsService.loadUserByUsername(loginRequest.getUsername());
         if (verifyPassword(user, loginRequest.getPassword())) {
             return user;
         } else {
@@ -33,32 +32,30 @@ public class AuthService {
         refreshTokenService.revokeTokenByValueOnLogout(tokenValue);
     }
 
-    public UserQueryResponse findUserById(Long userId) {
-        return userService.findUserById(userId);
-    }
-
     public boolean verifyPassword(VerifyPasswordRequest verifyPasswordRequest) {
-        return verifyPassword(userService.findAuthInfoByUsername(verifyPasswordRequest.getUsername()), verifyPasswordRequest.getPassword());
+        return verifyPassword(securityUserDetailsService.loadUserByUsername(verifyPasswordRequest.getUsername()), verifyPasswordRequest.getPassword());
     }
 
     public boolean resetPassword(ResetPasswordRequest resetPasswordRequest) {
-        UserAuthDTO user = userService.findAuthInfoByUsername(resetPasswordRequest.getUsername());
+        SecurityUser user = (SecurityUser) securityUserDetailsService.loadUserByUsername(resetPasswordRequest.getUsername());
         if (verifyPassword(user, resetPasswordRequest.getOldPassword())) {
-            userService.changePasswordById(user.getUserId(), resetPasswordRequest.getNewPassword());
+            securityUserDetailsService.changePasswordById(user.getUserId(), resetPasswordRequest.getNewPassword());
             return true;
         } else {
             return false;
         }
     }
 
-    private boolean verifyPassword(UserAuthDTO user, String password) {
+    // ==================== helper methods ====================
+
+    private boolean verifyPassword(UserDetails user, String password) {
         if (user == null) {
             throw new AuthException(ResultCode.USER_NOT_FOUND);
         }
         if (password == null || password.isBlank()) {
             return false;
         }
-        return passwordEncoder.matches(password, user.getPasswordHash());
+        return passwordEncoder.matches(password, user.getPassword());
     }
 
 }

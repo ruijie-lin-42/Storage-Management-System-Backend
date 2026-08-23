@@ -3,31 +3,27 @@ package io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.c
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.ApiErrorResponseExample;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.CommonErrorApiResponses;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.RequiresAuthApiResponses;
+import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.dto.SecurityUser;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.request.ResetPasswordRequest;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.request.VerifyPasswordRequest;
-import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.response.AuthResponse;
+import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.response.LoginResponse;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.request.LoginRequest;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.response.RefreshResponse;
-import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.dto.UserAuthDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.service.AuthService;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.service.JwtService;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.service.RefreshTokenService;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthException;
-import io.github.ruijie_lin_42.storage_management_system_backend.common.result.Result;
-import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.response.UserQueryResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -52,10 +48,9 @@ public class AuthController {
     @ApiResponse(responseCode = "401", description = "User login failed")
     @ApiErrorResponseExample(responseCode = "401", resultCode = ResultCode.LOGIN_FAIL)
     @CommonErrorApiResponses
-    // TODO: change return value from ResponseEntity to AuthResponse, set SET-COOKIE using HttpServletResponse instead
-    public ResponseEntity<Result<AuthResponse>> login(@RequestBody LoginRequest loginRequest) {
-        UserAuthDTO user = authService.login(loginRequest);
-        String accessToken = jwtService.getToken(user.getUserId(), user.getRole());
+    public LoginResponse login(@RequestBody LoginRequest loginRequest, HttpServletResponse httpServletResponse) {
+        SecurityUser user = authService.login(loginRequest);
+        String accessToken = jwtService.getToken(user.getUserId());
         String refreshToken = refreshTokenService.createRefreshToken(user.getUserId());
         ResponseCookie cookie = ResponseCookie
                 .from("refreshToken", refreshToken)
@@ -65,13 +60,10 @@ public class AuthController {
                 .path("/")
                 .sameSite("strict")
                 .build();
-        UserQueryResponse userQueryResponse = authService.findUserById(user.getUserId());
-        AuthResponse authResponse = new AuthResponse();
-        authResponse.setAccessToken(accessToken);
-        authResponse.setUser(userQueryResponse);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(Result.success(authResponse));
+        httpServletResponse.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        LoginResponse loginResponse = new LoginResponse();
+        loginResponse.setAccessToken(accessToken);
+        return loginResponse;
     }
 
     @PostMapping("/logout")
@@ -123,21 +115,6 @@ public class AuthController {
         RefreshResponse refreshResponse = new RefreshResponse();
         refreshResponse.setAccessToken(newToken);
         return refreshResponse;
-    }
-
-    @GetMapping("/me")
-    @Operation(summary = "Get current user's info",
-            description = """
-                    Get users' own info, where the user must be currently logged in;\s\s
-                    Should only be used on login and profile page;\s\s
-                    Users with any role could get their own info""")
-    @ApiResponse(responseCode = "200", description = "Current user's info sent successfully")
-    @CommonErrorApiResponses
-    @RequiresAuthApiResponses
-    public UserQueryResponse me() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long userId = (Long) authentication.getPrincipal();
-        return authService.findUserById(userId);
     }
 
     @PostMapping("/verifyPassword")

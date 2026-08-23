@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -33,10 +34,11 @@ public class ItemsController {
     private final ItemsService itemsService;
 
     @PostMapping("/search")
+    @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Fuzzy search for items that are in a specified storage with pagination",
             description = """
                     Fuzzy search for items in the storage specified by name and category with pagination;\s\s
-                    No limitations on user roles""")
+                    Requires at least USER role""")
     @ApiResponse(responseCode = "200", description = "Items retrieved successfully")
     @CommonErrorApiResponses
     @RequiresAuthApiResponses
@@ -45,11 +47,12 @@ public class ItemsController {
     }
 
     @PostMapping("/changeStock")
+    @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Change the stock count for an item in a storage",
             description = """
                     Change the stock count for a list of items;\s\s
                     Items that are decreasing stocks must have enough stock count, otherwise the whole request would fail;\s\s
-                    No limitations on user roles""")
+                    Requires at least USER role""")
     @ApiResponse(responseCode = "200", description = "Stock count for all specified items are changed successfully")
     @ApiResponse(responseCode = "400", description = "Item does not have enough stock to decrease")
     @ApiErrorResponseExample(responseCode = "400", resultCode = ResultCode.INVALID_ITEM_STOCK)

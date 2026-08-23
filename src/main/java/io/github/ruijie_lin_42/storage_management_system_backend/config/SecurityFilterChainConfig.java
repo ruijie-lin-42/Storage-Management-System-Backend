@@ -1,7 +1,6 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.config;
 
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.filter.JwtFilter;
-import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.service.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +16,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @RequiredArgsConstructor
 public class SecurityFilterChainConfig {
 
-    private final JwtService jwtService;
+    private final JwtFilter jwtFilter;
     private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
@@ -32,12 +31,12 @@ public class SecurityFilterChainConfig {
                         httpSecuritySessionManagementConfigurer
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(CsrfConfigurer<HttpSecurity>::disable)
-                .addFilterBefore(new JwtFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(httpSecurityExceptionHandlingConfigurer ->
                         httpSecurityExceptionHandlingConfigurer
-                                .authenticationEntryPoint((request, response, authException) ->
+                                .authenticationEntryPoint((_, response, _) ->
                                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED))
-                                .accessDeniedHandler((request, response, accessDeniedException) ->
+                                .accessDeniedHandler((_, response, _) ->
                                         response.setStatus(HttpServletResponse.SC_FORBIDDEN)))
                 .cors(httpSecurityCorsConfigurer ->
                         httpSecurityCorsConfigurer

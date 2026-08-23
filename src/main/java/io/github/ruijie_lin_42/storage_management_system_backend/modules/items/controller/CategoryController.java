@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,11 +33,12 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping("/tree")
+    @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Get all categories as a tree",
             description = """
                     Returns all categories as a tree;\s\s
                     This is a read-only operation;\s\s
-                    No limitations on user roles""")
+                    Requires at least USER role""")
     @ApiResponse(responseCode = "200", description = "Categories retrieved successfully as a tree")
     @CommonErrorApiResponses
     @RequiresAuthApiResponses
@@ -45,11 +47,12 @@ public class CategoryController {
     }
 
     @GetMapping("")
+    @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Search for categories",
             description = """
                     Fuzzy search for categories by name with pagination;\s\s
                     This is a read-only operation;\s\s
-                    No limitations on user roles""",
+                    Requires at least USER role""",
             parameters = {@Parameter(name = "name", description = "Search keyword, category's name", example = "Electronics")})
     @ApiResponse(responseCode = "200", description = "Categories found retrieved successfully with pagination")
     @CommonErrorApiResponses

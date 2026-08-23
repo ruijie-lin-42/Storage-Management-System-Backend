@@ -24,6 +24,7 @@ public enum ResultCode {
     UNAUTHORIZED(40199001, "Unauthorized"),
     // | 403... | FORBIDDEN |
     FORBIDDEN(40399001, "Forbidden"),
+    INSUFFICIENT_PRIVILEGE(40399002, "Current user do not have sufficient privilege for current operation"),
     // | 404... | NOT_FOUND |
     NOT_FOUND(40499001, "Not found"),
     // | 409... | CONFLICT |

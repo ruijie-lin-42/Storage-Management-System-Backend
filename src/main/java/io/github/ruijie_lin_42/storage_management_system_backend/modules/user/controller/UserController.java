@@ -20,6 +20,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.entity.User;
 
@@ -40,6 +43,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new user",
             description = """
                     User creation requires at least ADMIN role;\s\s
@@ -67,7 +71,7 @@ public class UserController {
     @Operation(summary = "Search for users",
             description = """
                     Fuzzy search for users;\s\s
-                    Search requires at least USER role;\s\s
+                    No limitations on user roles;\s\s
                     Records will be empty if no users are found""")
     @ApiResponse(responseCode = "200", description = "User retrieved successfully")
     @CommonErrorApiResponses
@@ -77,6 +81,7 @@ public class UserController {
     }
 
     @PatchMapping("/dashboard/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Edit user info via dashboard",
             description = """
             Edit user info via dashboard, different from edit user info through profile;\s\s
@@ -104,7 +109,7 @@ public class UserController {
     @Operation(summary = "Edit user info via profile page",
             description = """
                     Edit user info via profile, different from edit user info via dashboard;\s\s
-                    Through profile, user modification requires at least USER role;\s\s
+                    Through profile, user modification has no limitations on user roles;\s\s
                     Through profile, users could edit their own info but not others;\s\s
                     See request body schema for editable fields""",
             parameters = {@Parameter(name = "id", description = "The user's id whose info is being edited via profile page", example = "1")})
@@ -124,6 +129,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete user",
             description = """
                     Soft deletion: mark user as deleted in database instead of real deletion;\s\s
@@ -147,7 +153,7 @@ public class UserController {
     @Operation(summary = "Check if the given username already exists.",
             description = """
                     Check whether username specified exists;\s\s
-                    This step only happens on user creation or modification, therefore requires at least USER role;\s\s
+                    This step only happens on user creation or modification, therefore no limitations on user roles;\s\s
                     Returns true/false if found/not found, does not throw error if not found""",
             parameters = {@Parameter(name = "username", description = "Specified username for checking if it already exists", example = "ZhangSan123")})
     @ApiResponse(responseCode = "200", description = "Successfully checked if the given username exists")
@@ -155,6 +161,21 @@ public class UserController {
     @RequiresAuthApiResponses
     public Boolean ifUsernameExists(@RequestParam String username) {
         return !userService.lambdaQuery().eq(User::getUsername, username).list().isEmpty();
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get current user's info",
+            description = """
+                    Get users' own info, where the user must be currently logged in;\s\s
+                    Should only be used on login and profile page;\s\s
+                    Users with any role could get their own info""")
+    @ApiResponse(responseCode = "200", description = "Current user's info sent successfully")
+    @CommonErrorApiResponses
+    @RequiresAuthApiResponses
+    public UserQueryResponse me() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = (Long) authentication.getPrincipal();
+        return userService.findUserById(userId);
     }
 
 }

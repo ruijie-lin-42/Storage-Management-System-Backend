@@ -3,6 +3,10 @@ package io.github.ruijie_lin_42.storage_management_system_backend.modules.user.s
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Role;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthException;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.utils.SecurityUtils;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.dto.UserAuthDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.converter.PageConverter;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.response.PageResultResponse;
@@ -38,8 +42,13 @@ public class UserService extends ServiceImpl<UserMapper, User> {
     private final UserConverter userConverter;
 
     public int createUser(CreateUserRequest createUserRequest) {
-        User user = userConverter.toEntity(createUserRequest, passwordEncoder.encode((createUserRequest.getPassword())));
-        return userMapper.insert(user);
+        Role operatorRole = SecurityUtils.getCurrentUserHighestRole();
+        if (canOperate(operatorRole, createUserRequest.getRole())){
+            User user = userConverter.toEntity(createUserRequest, passwordEncoder.encode((createUserRequest.getPassword())));
+            return userMapper.insert(user);
+        }else{
+            throw new AuthException(ResultCode.INSUFFICIENT_PRIVILEGE);
+        }
     }
 
     public int dashboardEditUserById(DashboardEditUserRequest dashboardEditUserRequest, Long id) {
@@ -47,7 +56,13 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(User::getId, id)
                 .isNull(User::getDeletedAt);
-        return userMapper.update(user, lambdaUpdateWrapper);
+        User target = userMapper.selectOne(lambdaUpdateWrapper);
+        Role operatorRole = SecurityUtils.getCurrentUserHighestRole();
+        if(canOperate(operatorRole, target.getRole())) {
+            return userMapper.update(user, lambdaUpdateWrapper);
+        }else {
+            throw new AuthException(ResultCode.INSUFFICIENT_PRIVILEGE);
+        }
     }
 
     public int profileEditUserById(ProfileEditUserRequest profileEditUserRequest, Long id) {
@@ -59,10 +74,18 @@ public class UserService extends ServiceImpl<UserMapper, User> {
     }
 
     public int deleteUserById(Long id) {
-        User user = new User();
-        user.setId(id);
-        user.setDeletedAt(Instant.now());
-        return userMapper.updateById(user);
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(User::getId, id);
+        User target = userMapper.selectOne(lambdaQueryWrapper);
+        Role operatorRole = SecurityUtils.getCurrentUserHighestRole();
+        if(canOperate(operatorRole, target.getRole())) {
+            User user = new User();
+            user.setId(id);
+            user.setDeletedAt(Instant.now());
+            return userMapper.updateById(user);
+        }else {
+            throw new AuthException(ResultCode.INSUFFICIENT_PRIVILEGE);
+        }
     }
 
     public PageResultResponse<UserQueryResponse> queryUserInPage(UserQueryRequest userQueryRequest) {
@@ -72,16 +95,6 @@ public class UserService extends ServiceImpl<UserMapper, User> {
                 .isNull(User::getDeletedAt);
         Page<User> result = userMapper.selectPage(page, lambdaQueryWrapper);
         return PageConverter.convert(result, userConverter::toQueryResponse);
-    }
-
-    public UserAuthDTO findAuthInfoByUsername(String username) {
-        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(User::getUsername, username);
-        User user = userMapper.selectOne(lambdaQueryWrapper);
-        if (user == null) {
-            return null;
-        }
-        return userConverter.toAutoDTO(user);
     }
 
     public UserQueryResponse findUserById(Long userId) {
@@ -96,4 +109,27 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         return userMapper.updateById(user);
     }
 
+    // ==================== for AUTH module ====================
+
+    public UserAuthDTO findAuthInfoByUsername(String username) {
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(User::getUsername, username)
+                .isNull(User::getDeletedAt);
+        User user = userMapper.selectOne(lambdaQueryWrapper);
+        if (user == null) return null;
+        return userConverter.toAutoDTO(user);
+    }
+
+    public UserAuthDTO findAuthInfoByUserId(Long userId) {
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(User::getId, userId)
+                .isNull(User::getDeletedAt);
+        User user = userMapper.selectOne(lambdaQueryWrapper);
+        if (user == null) return null;
+        return userConverter.toAutoDTO(user);
+    }
+
+    public boolean canOperate(Role operator, Role target) {
+        return operator != null && operator.hasHigherRoleThan(target);
+    }
 }

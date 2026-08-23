@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,11 +38,12 @@ public class StockHistoryController {
     private final StockHistoryService stockHistoryService;
 
     @PostMapping("/search")
+    @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Fuzzy search for a storage's stock history",
             description = """
                     Used for show simple information about the storage's stock history;\s\s
                     e.g. storage1's stock changed by xxx at xxx;\s\s
-                    No limitations on user roles""")
+                    Requires at least USER role""")
     @ApiResponse(responseCode = "200", description = "Stock history retrieved successfully")
     @CommonErrorApiResponses
     @RequiresAuthApiResponses
@@ -51,11 +53,12 @@ public class StockHistoryController {
     }
 
     @PostMapping("/itemStockHistory")
+    @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Query for all the items in a stock history record",
             description = """
                     Query for detailed items stock changes in a stock history;\s\s
                     e.g. what items' stock counts changed in one record of storage1's stock change history;\s\s
-                    No limitations on user roles""")
+                    Requires at least USER role""")
     @ApiResponse(responseCode = "200", description = "Items info in a stock history record retrieved successfully")
     @CommonErrorApiResponses
     @RequiresAuthApiResponses
@@ -65,10 +68,11 @@ public class StockHistoryController {
     }
 
     @PostMapping("/item")
+    @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Query for all the stock history for an exact item",
             description = """
                     Given the item's id, return all of its stock history;\s\s
-                    No limitations on user roles""")
+                    Requires at least USER role""")
     @ApiResponse(responseCode = "200", description = "Stock history for an exact item retrieved successfully")
     @CommonErrorApiResponses
     @RequiresAuthApiResponses
@@ -78,10 +82,11 @@ public class StockHistoryController {
     }
 
     @GetMapping("/{id}/page")
+    @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Query for the position that specified stock history should be in the Stock History page",
             description = """
                     Used for jumping from item info to stock history page to see more info;\s\s
-                    No limitations on user roles""",
+                    Requires at least USER role""",
             parameters = {@Parameter(name = "id", description = "Stock history's id", example = "1"),
                     @Parameter(name = "pageSize", description = "The number of stock histories on one page of stock history", example = "10")})
     @ApiResponse(responseCode = "200", description = "Page number retrieved successfully")

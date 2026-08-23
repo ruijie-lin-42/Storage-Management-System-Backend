@@ -4,11 +4,13 @@ import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Re
 import io.github.ruijie_lin_42.storage_management_system_backend.common.result.Result;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.nio.file.AccessDeniedException;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -39,6 +41,12 @@ public class GlobalExceptionHandler {
         // TODO: change to formal loggers
         e.printStackTrace();
         return Result.fail(ResultCode.DATABASE_CONNECTION_FAILED);
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public Result<Void> handleAccessDeniedException(AuthorizationDeniedException e) {
+        e.printStackTrace();
+        return Result.fail(ResultCode.INSUFFICIENT_PRIVILEGE);
     }
 
     @ExceptionHandler(Exception.class)

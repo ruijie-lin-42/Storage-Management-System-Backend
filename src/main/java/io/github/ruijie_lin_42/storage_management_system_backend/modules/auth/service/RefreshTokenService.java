@@ -5,12 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.DataIntegrityException;
+import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.dto.SecurityUser;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.entity.RefreshToken;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.mapper.RefreshTokenMapper;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.response.UserQueryResponse;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -22,7 +24,7 @@ import java.util.UUID;
 public class RefreshTokenService {
 
     private final RefreshTokenMapper refreshTokenMapper;
-    private final UserService userService;
+    private final SecurityUserDetailsService securityUserDetailsService;
     private final JwtService jwtService;
 
     public String createRefreshToken(Long userId) {
@@ -65,11 +67,12 @@ public class RefreshTokenService {
                 this.revokeTokenByValueOnRefresh(refreshToken);
                 throw new AuthException(ResultCode.INVALID_TOKEN);
             } else {
-                UserQueryResponse user = userService.findUserById(token.getUserId());
+                Long userId = token.getUserId();
+                UserDetails user = securityUserDetailsService.loadUserByUserId(userId);
                 if (user == null) {
                     throw new AuthException(ResultCode.INVALID_TOKEN);
                 }
-                return jwtService.getToken(user.getId(), user.getRole());
+                return jwtService.getToken(userId);
             }
         } else {
             throw new AuthException(ResultCode.INVALID_TOKEN);
