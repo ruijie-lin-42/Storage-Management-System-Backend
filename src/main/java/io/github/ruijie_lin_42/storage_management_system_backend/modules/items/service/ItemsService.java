@@ -21,9 +21,11 @@ import io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_h
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_history.service.StockHistoryService;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -36,6 +38,7 @@ import java.util.function.Function;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ItemsService extends ServiceImpl<ItemsMapper, Items> {
 
     private final ItemsMapper itemsMapper;
@@ -48,8 +51,8 @@ public class ItemsService extends ServiceImpl<ItemsMapper, Items> {
     }
 
     @Transactional
-    public Integer changeStock(ItemsStockChangeRequest itemsStockChangeRequest) {
-        int affectedRows, totalAffectedRows = 0;
+    public void changeStock(ItemsStockChangeRequest itemsStockChangeRequest) {
+        int affectedRows;
         Long storageId = itemsStockChangeRequest.getStorageId();
         CreateStockHistoryDTO createStockHistoryDTO = getCreateStockAdjustmentHistoryDTO(itemsStockChangeRequest);
         StockHistory result = stockHistoryService.addStockAdjustmentHistory(createStockHistoryDTO);
@@ -58,34 +61,54 @@ public class ItemsService extends ServiceImpl<ItemsMapper, Items> {
             Items item = itemsMapper.selectForUpdate(stockChangeRequest.getItemId(), storageId);
             if (item == null) {
                 if (stockChangeRequest.getChange() < 0) {
-                    throw new BusinessException(ResultCode.INVALID_ITEM_STOCK);
+                    throw new BusinessException(ResultCode.INVALID_ITEM_STOCK, Map.of(
+                            "storageId", storageId,
+                            "itemId", stockChangeRequest.getItemId(),
+                            "operatorId", createStockHistoryDTO.getCreatedBy(),
+                            "currentStock", 0,
+                            "requestedChange", stockChangeRequest.getChange(),
+                            "expectedStockAfter", -stockChangeRequest.getChange()
+                    ));
                 }
                 affectedRows = itemsMapper.insertItem(stockChangeRequest.getItemId(), storageId, stockChangeRequest.getChange());
-                if(affectedRows > 1 || affectedRows < 0){
-                    throw new DataIntegrityException(ResultCode.INSERT_AFFECTED_ROWS_INVALID);
+                if (affectedRows != 1) {
+                    throw new DataIntegrityException(ResultCode.INSERT_AFFECTED_ROWS_INVALID, 1, affectedRows, "changeStock", Map.of(
+                            "storageId", storageId,
+                            "itemId", stockChangeRequest.getItemId(),
+                            "operatorId", createStockHistoryDTO.getCreatedBy()
+                    ));
                 }
             } else {
                 int newCount = item.getCount() + stockChangeRequest.getChange();
                 if (newCount < 0) {
-                    throw new BusinessException(ResultCode.INVALID_ITEM_STOCK);
+                    throw new BusinessException(ResultCode.INVALID_ITEM_STOCK, Map.of(
+                            "storageId", storageId,
+                            "itemId", stockChangeRequest.getItemId(),
+                            "operatorId", createStockHistoryDTO.getCreatedBy(),
+                            "currentStock", item.getCount(),
+                            "requestedChange", stockChangeRequest.getChange(),
+                            "expectedStockAfter", newCount
+                    ));
                 }
                 affectedRows = itemsMapper.updateItemCount(stockChangeRequest.getItemId(), storageId, newCount);
-                if(affectedRows > 1 || affectedRows < 0){
-                    throw new DataIntegrityException(ResultCode.UPDATE_AFFECTED_ROWS_INVALID);
+                if (affectedRows != 1) {
+                    throw new DataIntegrityException(ResultCode.UPDATE_AFFECTED_ROWS_INVALID, 1, affectedRows, "changeStock", Map.of(
+                            "storageId", storageId,
+                            "itemId", stockChangeRequest.getItemId(),
+                            "operatorId", createStockHistoryDTO.getCreatedBy()
+                    ));
                 }
             }
-            totalAffectedRows += affectedRows;
             CreateItemStockHistoryDTO createItemStockHistoryDTO = getCreateItemStockHistoryDTO(stockChangeRequest, stockHistoryId, item);
             stockHistoryService.addItemStockHistory(createItemStockHistoryDTO);
+            log.info("Stock changed successfully, operatorId={}, stockHistory={}",
+                    SecurityUtils.getUserIdFromContext(), result);
         }
-        return totalAffectedRows;
     }
 
-    /**
-     * Helper methods
-     */
+    // ==================== Helper Methods ====================
 
-    private CreateStockHistoryDTO getCreateStockAdjustmentHistoryDTO(ItemsStockChangeRequest itemsStockChangeRequest){
+    private CreateStockHistoryDTO getCreateStockAdjustmentHistoryDTO(ItemsStockChangeRequest itemsStockChangeRequest) {
         CreateStockHistoryDTO createStockHistoryDTO = new CreateStockHistoryDTO();
         createStockHistoryDTO.setStorageId(itemsStockChangeRequest.getStorageId());
         createStockHistoryDTO.setCreatedBy(SecurityUtils.getUserIdFromContext());
@@ -95,7 +118,7 @@ public class ItemsService extends ServiceImpl<ItemsMapper, Items> {
         return createStockHistoryDTO;
     }
 
-    private CreateItemStockHistoryDTO getCreateItemStockHistoryDTO(StockChangeRequest stockChangeRequest, Long stockHistoryId, @Nullable Items item){
+    private CreateItemStockHistoryDTO getCreateItemStockHistoryDTO(StockChangeRequest stockChangeRequest, Long stockHistoryId, @Nullable Items item) {
         CreateItemStockHistoryDTO createItemStockHistoryDTO = new CreateItemStockHistoryDTO();
         createItemStockHistoryDTO.setStockHistoryId(stockHistoryId);
         createItemStockHistoryDTO.setItemId(stockChangeRequest.getItemId());

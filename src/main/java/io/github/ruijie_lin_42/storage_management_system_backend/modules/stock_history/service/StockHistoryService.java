@@ -3,10 +3,12 @@ package io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.converter.PageConverter;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.response.PageResultResponse;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.utils.SecurityUtils;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_history.convert.ItemStockHistoryConverter;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_history.convert.StockHistoryConverter;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_history.model.dto.CreateItemStockHistoryDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_history.model.dto.CreateStockHistoryDTO;
+import io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_history.model.entity.ItemStockHistory;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_history.model.entity.StockHistory;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_history.mapper.ItemStockHistoryMapper;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_history.mapper.StockHistoryMapper;
@@ -16,6 +18,7 @@ import io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_h
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_history.model.response.ItemStockHistoryResponse;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.stock_history.model.response.StockHistoryResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,6 +34,7 @@ import java.util.function.Function;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StockHistoryService extends ServiceImpl<StockHistoryMapper, StockHistory> {
 
     private final ItemStockHistoryMapper itemStockHistoryMapper;
@@ -59,11 +63,17 @@ public class StockHistoryService extends ServiceImpl<StockHistoryMapper, StockHi
     public StockHistory addStockAdjustmentHistory(CreateStockHistoryDTO createStockHistoryDTO) {
         StockHistory stockHistory = stockHistoryConverter.toEntity(createStockHistoryDTO);
         stockHistoryMapper.insertStockHistory(stockHistory);
+        // TODO: 设置回填id，不然这里拿不到id
+        log.info("Stock history created successfully, operatorId={}, stockHistoryId={}, values={}",
+                SecurityUtils.getUserIdFromContext(), stockHistory.getId(), createStockHistoryDTO);
         return stockHistory;
     }
 
-    public Integer addItemStockHistory(CreateItemStockHistoryDTO createItemStockHistoryDTO) {
-        return itemStockHistoryMapper.insertItemStockHistory(itemStockHistoryConverter.toEntity(createItemStockHistoryDTO));
+    public void addItemStockHistory(CreateItemStockHistoryDTO createItemStockHistoryDTO) {
+        ItemStockHistory itemStockHistory = itemStockHistoryConverter.toEntity(createItemStockHistoryDTO);
+        itemStockHistoryMapper.insertItemStockHistory(itemStockHistory);
+        // no logs, this is the creation for a single item's stock change history,
+        //  could have record too many logs that make noises
     }
 
     public Integer getPageNumById(Long stockHistoryId, Integer pageSize) {

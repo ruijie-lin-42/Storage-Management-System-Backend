@@ -9,7 +9,10 @@ public enum Role {
 
     SUPER_ADMIN("ROLE_SUPER_ADMIN", 300),
     ADMIN("ROLE_ADMIN", 200),
-    USER("ROLE_USER", 100);
+    USER("ROLE_USER", 100),
+    ANONYMOUS("ROLE_ANONYMOUS", 0)
+
+    ;
 
     private final String authority;
     private final int hierarchy;

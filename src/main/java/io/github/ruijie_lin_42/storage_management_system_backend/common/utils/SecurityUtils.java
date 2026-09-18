@@ -1,6 +1,7 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.common.utils;
 
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Role;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,6 +14,9 @@ import java.util.Iterator;
 public class SecurityUtils {
 
     public static Long getUserIdFromContext() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) return null;
+        if (authentication instanceof AnonymousAuthenticationToken) return null;
         return (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
@@ -20,9 +24,7 @@ public class SecurityUtils {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         List<String> roles = new ArrayList<>();
-        authorities.forEach((grantedAuthority) -> {
-            roles.add(grantedAuthority.getAuthority());
-        });
+        authorities.forEach((grantedAuthority -> roles.add(grantedAuthority.getAuthority())));
         int numKnownRole = 0;
         Role highestRole = Role.USER;
         Iterator<String> roleIterator = roles.iterator();
@@ -44,8 +46,8 @@ public class SecurityUtils {
                 numKnownRole--;
             }
         }
-        if(numKnownRole == 0) {
-            return null;
+        if (numKnownRole == 0) {
+            return Role.ANONYMOUS;
         }
         return highestRole;
     }

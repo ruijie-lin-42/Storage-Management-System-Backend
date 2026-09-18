@@ -4,6 +4,7 @@ import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptio
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.ApiErrorResponseExample;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.CommonErrorApiResponses;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.RequiresAuthApiResponses;
+import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.convert.AuthConverter;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.dto.SecurityUser;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.request.ResetPasswordRequest;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.request.VerifyPasswordRequest;
@@ -27,6 +28,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -37,6 +39,7 @@ public class AuthController {
     private final AuthService authService;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final AuthConverter authConverter;
 
     @PostMapping("/login")
     @Operation(summary = "User login",
@@ -48,8 +51,8 @@ public class AuthController {
     @ApiResponse(responseCode = "401", description = "User login failed")
     @ApiErrorResponseExample(responseCode = "401", resultCode = ResultCode.LOGIN_FAIL)
     @CommonErrorApiResponses
-    public LoginResponse login(@RequestBody LoginRequest loginRequest, HttpServletResponse httpServletResponse) {
-        SecurityUser user = authService.login(loginRequest);
+    public LoginResponse login(@RequestBody LoginRequest loginRequest, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        SecurityUser user = authService.login(authConverter.toLoginRequestDTO(loginRequest, httpServletRequest.getRemoteAddr(), httpServletRequest.getHeader("User-Agent")));
         String accessToken = jwtService.getToken(user.getUserId());
         String refreshToken = refreshTokenService.createRefreshToken(user.getUserId());
         ResponseCookie cookie = ResponseCookie
@@ -77,7 +80,7 @@ public class AuthController {
     @RequiresAuthApiResponses
     public Void logout(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
-        if(cookies == null){
+        if (cookies == null) {
             return null;
         }
         String tokenValue = Arrays.stream(cookies)
@@ -85,10 +88,10 @@ public class AuthController {
                 .findFirst()
                 .map(Cookie::getValue)
                 .orElse(null);
-        if(tokenValue == null){
+        if (tokenValue == null) {
             return null;
         }
-        authService.logout(tokenValue);
+        authService.logout(authConverter.toLogoutRequestDTO(tokenValue, request.getRemoteAddr(), request.getHeader("User-Agent")));
         return null;
     }
 
@@ -104,7 +107,19 @@ public class AuthController {
     public RefreshResponse refresh(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
-            throw new AuthenticationException(ResultCode.INVALID_TOKEN);
+            String header = request.getHeader("Authorization");
+            if (header != null && header.startsWith("Bearer ")) {
+                String accessToken = header.substring(7);
+                throw new AuthenticationException(ResultCode.INVALID_TOKEN, Map.of(
+                        "refreshTokenSnippet", "",
+                        "userId (unauthenticated)", jwtService.getUserId(accessToken)
+                ));
+            } else {
+                throw new AuthenticationException(ResultCode.INVALID_TOKEN, Map.of(
+                        "refreshTokenSnippet", "",
+                        "userId (unauthenticated)", ""
+                ));
+            }
         }
         String refreshToken = Arrays.stream(cookies)
                 .filter(cookie -> cookie.getName().equals("refreshToken"))
@@ -127,7 +142,7 @@ public class AuthController {
     @ApiResponse(responseCode = "200", description = "The result of if the verification passes is sent through response")
     @CommonErrorApiResponses
     @RequiresAuthApiResponses
-    public Boolean verifyPassword(@RequestBody @Valid VerifyPasswordRequest verifyPasswordRequest){
+    public Boolean verifyPassword(@RequestBody @Valid VerifyPasswordRequest verifyPasswordRequest) {
         return authService.verifyPassword(verifyPasswordRequest);
     }
 
@@ -142,8 +157,9 @@ public class AuthController {
     @ApiResponse(responseCode = "200", description = "Password reset succeeded")
     @CommonErrorApiResponses
     @RequiresAuthApiResponses
-    public Boolean resetPassword(@RequestBody @Valid ResetPasswordRequest resetPasswordRequest){
-        return authService.resetPassword(resetPasswordRequest);
+    public Void resetPassword(@RequestBody @Valid ResetPasswordRequest resetPasswordRequest) {
+        authService.resetPassword(resetPasswordRequest);
+        return null;
     }
 
 }

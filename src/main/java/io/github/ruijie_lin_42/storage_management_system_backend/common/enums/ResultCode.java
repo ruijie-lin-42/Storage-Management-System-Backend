@@ -47,6 +47,7 @@ public enum ResultCode {
     // =========================== 02 AUTH MODULE ===========================
     // | 400... | BAD_REQUEST |
     LOGIN_FAIL(40002001, HttpStatus.BAD_REQUEST, "Username or password incorrect"),
+    PASSWORD_RESET_FAIL(40002002, HttpStatus.BAD_REQUEST, "Username or password incorrect"),
     // | 401... | UNAUTHORIZED |
     INVALID_TOKEN(40102001, HttpStatus.UNAUTHORIZED, "Token invalid"),
     // | 404... | NOT_FOUND |

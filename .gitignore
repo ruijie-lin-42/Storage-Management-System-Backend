@@ -34,3 +34,7 @@ build/
 
 ### MyBatis-Plus Code Generator (local dev tool) ###
 src/main/java/io/github/ruijie_lin_42/storage_management_system_backend/devTools/CodeGenerator.java
+
+### logs
+logs/
+*.log

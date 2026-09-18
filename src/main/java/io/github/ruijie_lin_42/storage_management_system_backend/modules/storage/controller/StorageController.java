@@ -1,8 +1,6 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.modules.storage.controller;
 
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
-import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.BusinessException;
-import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.DataIntegrityException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.ApiErrorResponseExample;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.CommonErrorApiResponses;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.openapi.RequiresAuthApiResponses;
@@ -10,7 +8,6 @@ import io.github.ruijie_lin_42.storage_management_system_backend.common.response
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.storage.model.request.CreateStorageRequest;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.storage.model.request.EditStorageRequest;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.storage.model.request.StorageQueryRequest;
-import io.github.ruijie_lin_42.storage_management_system_backend.modules.storage.model.entity.Storage;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.storage.service.StorageService;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.storage.model.response.StorageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +16,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,15 +47,7 @@ public class StorageController {
     @CommonErrorApiResponses
     @RequiresAuthApiResponses
     public Void addNewStorage(@RequestBody @Valid CreateStorageRequest user) {
-        // TODO: move logic to service methods, remove affectedRows check
-        try {
-            int affectedNumRows = storageService.createStorage(user);
-            if (affectedNumRows > 1) {
-                throw new DataIntegrityException(ResultCode.INSERT_AFFECTED_ROWS_INVALID);
-            }
-        } catch (DuplicateKeyException e) {
-            throw new BusinessException(ResultCode.DUPLICATE_STORAGE_NAME);
-        }
+        storageService.createStorage(user);
         return null;
     }
 
@@ -91,12 +79,7 @@ public class StorageController {
     @CommonErrorApiResponses
     @RequiresAuthApiResponses
     public Void updateStorageById(@RequestBody @Valid EditStorageRequest storage, @PathVariable Long id) {
-        int affectedNumRows = storageService.editById(storage, id);
-        if (affectedNumRows == 0) {
-            throw new BusinessException(ResultCode.STORAGE_UNAVAILABLE);
-        } else if (affectedNumRows > 1) {
-            throw new DataIntegrityException(ResultCode.UPDATE_AFFECTED_ROWS_INVALID);
-        }
+        storageService.editById(storage, id);
         return null;
     }
 
@@ -112,10 +95,7 @@ public class StorageController {
     @CommonErrorApiResponses
     @RequiresAuthApiResponses
     public Void deleteStorageById(@PathVariable Long id) {
-        int affectedNumRows = storageService.removeById(id);
-        if (affectedNumRows > 1) {
-            throw new DataIntegrityException(ResultCode.DELETE_AFFECTED_ROWS_INVALID);
-        }
+        storageService.removeById(id);
         return null;
     }
 
@@ -131,7 +111,7 @@ public class StorageController {
     @CommonErrorApiResponses
     @RequiresAuthApiResponses
     public Boolean ifStorageNameExists(@RequestParam String name) {
-        return !storageService.lambdaQuery().eq(Storage::getName, name).list().isEmpty();
+        return storageService.ifStorageNameExists(name);
     }
 
 }

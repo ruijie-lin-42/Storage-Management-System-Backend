@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.ResultCode;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Role;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.AuthorizationException;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.BusinessException;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.DataIntegrityException;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.utils.SecurityUtils;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.dto.UserAuthDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.common.converter.PageConverter;
@@ -20,10 +22,15 @@ import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.mo
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.request.UserQueryRequest;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.response.UserQueryResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Map;
 
 /**
  * <p>
@@ -35,57 +42,110 @@ import java.time.Instant;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService extends ServiceImpl<UserMapper, User> {
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final UserConverter userConverter;
 
-    public int createUser(CreateUserRequest createUserRequest) {
+    public void createUser(CreateUserRequest createUserRequest) {
         Role operatorRole = SecurityUtils.getCurrentUserHighestRole();
-        if (canOperate(operatorRole, createUserRequest.getRole())){
+        if (canOperate(operatorRole, createUserRequest.getRole())) {
             User user = userConverter.toEntity(createUserRequest, passwordEncoder.encode((createUserRequest.getPassword())));
-            return userMapper.insert(user);
-        }else{
-            throw new AuthorizationException(ResultCode.INSUFFICIENT_PRIVILEGE);
+            try {
+                userMapper.insert(user);
+                // TODO: 设置回填id，不然这里拿不到id
+                log.info("User created successfully, operatorId={}, userId={}, username={}",
+                        SecurityUtils.getUserIdFromContext(), user.getId(), user.getUsername());
+            } catch (DuplicateKeyException e) {
+                throw new BusinessException(ResultCode.DUPLICATE_USERNAME, Map.of(
+                        "username", createUserRequest.getUsername()
+                ));
+            }
+        } else {
+            throw new AuthorizationException(ResultCode.INSUFFICIENT_PRIVILEGE, "createUser", Map.of(
+                    "targetUsername", createUserRequest.getUsername(),
+                    "targetRole", createUserRequest.getRole()
+            ));
         }
     }
 
-    public int dashboardEditUserById(DashboardEditUserRequest dashboardEditUserRequest, Long id) {
+    public void dashboardEditUserById(DashboardEditUserRequest dashboardEditUserRequest, Long id) {
         User user = userConverter.toEntity(dashboardEditUserRequest);
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(User::getId, id)
                 .isNull(User::getDeletedAt);
         User target = userMapper.selectOne(lambdaUpdateWrapper);
         Role operatorRole = SecurityUtils.getCurrentUserHighestRole();
-        if(canOperate(operatorRole, target.getRole())) {
-            return userMapper.update(user, lambdaUpdateWrapper);
-        }else {
-            throw new AuthorizationException(ResultCode.INSUFFICIENT_PRIVILEGE);
+        if (canOperate(operatorRole, target.getRole())) {
+            int affectedNumRows = userMapper.update(user, lambdaUpdateWrapper);
+            if (affectedNumRows == 0) {
+                throw new BusinessException(ResultCode.USER_UNAVAILABLE, Map.of(
+                        "userId", id
+                ));
+            } else if (affectedNumRows > 1) {
+                throw new DataIntegrityException(ResultCode.UPDATE_AFFECTED_ROWS_INVALID, 1, affectedNumRows, "dashboardEditUserById", Map.of(
+                        "userId", id
+                ));
+            }
+            log.info("User updated successfully through dashboard, operatorId={}, userId={}, newValues={}",
+                    SecurityUtils.getUserIdFromContext(), id, dashboardEditUserRequest);
+        } else {
+            throw new AuthorizationException(ResultCode.INSUFFICIENT_PRIVILEGE, "dashboardEditUser", Map.of(
+                    "targetUserId", target.getId(),
+                    "targetUserRole", target.getRole()
+            ));
         }
     }
 
-    public int profileEditUserById(ProfileEditUserRequest profileEditUserRequest, Long id) {
+    public void profileEditUserById(ProfileEditUserRequest profileEditUserRequest, Long id) {
         User user = userConverter.toEntity(profileEditUserRequest);
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(User::getId, id)
                 .isNull(User::getDeletedAt);
-        return userMapper.update(user, lambdaUpdateWrapper);
+        int affectedRows = userMapper.update(user, lambdaUpdateWrapper);
+        if (affectedRows == 0) {
+            throw new BusinessException(ResultCode.USER_UNAVAILABLE, Map.of(
+                    "userId", id
+            ));
+        } else if (affectedRows > 1) {
+            throw new DataIntegrityException(ResultCode.UPDATE_AFFECTED_ROWS_INVALID, 1, affectedRows, "profileEditUserById", Map.of(
+                    "userId", id
+            ));
+        }
+        log.info("User updated successfully through profile, operatorId={}, userId={}. newValues={}",
+                SecurityUtils.getUserIdFromContext(), id, profileEditUserRequest);
     }
 
-    public int deleteUserById(Long id) {
+    public void deleteUserById(Long id) {
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(User::getId, id);
         User target = userMapper.selectOne(lambdaQueryWrapper);
+        if (target == null) return;
         Role operatorRole = SecurityUtils.getCurrentUserHighestRole();
-        if(canOperate(operatorRole, target.getRole())) {
+        if (canOperate(operatorRole, target.getRole())) {
             User user = new User();
             user.setId(id);
             user.setDeletedAt(Instant.now());
-            return userMapper.updateById(user);
-        }else {
-            throw new AuthorizationException(ResultCode.INSUFFICIENT_PRIVILEGE);
+            int affectedNumRows = userMapper.updateById(user);
+            if (affectedNumRows > 1) {
+                throw new DataIntegrityException(ResultCode.DELETE_AFFECTED_ROWS_INVALID, 1, affectedNumRows, "deleteUserById", Map.of(
+                        "userId", id
+                ));
+            }
+            log.info("User soft-deleted successfully, operatorId={}, userId={}",
+                    SecurityUtils.getUserIdFromContext(), id);
+        } else {
+            throw new AuthorizationException(ResultCode.INSUFFICIENT_PRIVILEGE, "deleteUserById", Map.of(
+                    "targetUserId", target.getId(),
+                    "targetUserRole", target.getRole()
+            ));
         }
+    }
+
+    public boolean ifUsernameExists(String username) {
+        return !lambdaQuery().eq(User::getUsername, username).list().isEmpty();
     }
 
     public PageResultResponse<UserQueryResponse> queryUserInPage(UserQueryRequest userQueryRequest) {
@@ -97,16 +157,29 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         return PageConverter.convert(result, userConverter::toQueryResponse);
     }
 
-    public UserQueryResponse findUserById(Long userId) {
+    public UserQueryResponse findUserByCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = (Long) authentication.getPrincipal();
         User user = userMapper.selectById(userId);
         return userConverter.toQueryResponse(user);
     }
 
-    public Integer changePasswordById(Long id, String newPassword) {
+    public void changePasswordById(Long id, String newPassword) {
         User user = new User();
         user.setId(id);
         user.setPassword(passwordEncoder.encode(newPassword));
-        return userMapper.updateById(user);
+        int affectedRows = userMapper.updateById(user);
+        if (affectedRows > 1) {
+            throw new DataIntegrityException(ResultCode.UPDATE_AFFECTED_ROWS_INVALID, 1, affectedRows, "changePasswordById", Map.of(
+                    "userId", id
+            ));
+        } else if (affectedRows == 0) {
+            throw new BusinessException(ResultCode.USER_UNAVAILABLE, Map.of(
+                    "userId", id
+            ));
+        }
+        log.info("Password changed successfully, operatorId={}, userId={}",
+                SecurityUtils.getUserIdFromContext(), id);
     }
 
     // ==================== for AUTH module ====================

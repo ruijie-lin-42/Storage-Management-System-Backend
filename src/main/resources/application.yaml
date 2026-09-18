@@ -23,3 +23,18 @@ my-batis-plus:
   configuration:
     default-enum-type-handler:
       org.apache.ibatis.type.EnumTypeHandler
+logging:
+  level:
+    root: INFO
+    com.storage_management_system_backend: DEBUG
+  file:
+    name: ${LOG_DIR:logs}/app.log
+  pattern:
+    console: "%clr(%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd'T'HH:mm:ss.SSSXXX}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}){} %clr(${PID:-}){magenta} %clr(--- %esb(){APPLICATION_NAME}%esb{APPLICATION_GROUP}[%15.15t] [traceId=%X{traceId:-}] ${LOG_CORRELATION_PATTERN:-}){faint}%clr(%40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:%wEx}}"
+    file: "%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd'T'HH:mm:ss.SSSXXX}} ${LOG_LEVEL_PATTERN:-%5p} ${PID:-} --- %esb(){APPLICATION_NAME}%esb{APPLICATION_GROUP}[%15.15t] [traceId=%X{traceId:-}] ${LOG_CORRELATION_PATTERN:-}%40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:%wEx}}"
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+      total-size-cap: 1GB
+      file-name-pattern: ${LOG_DIR:logs}/app.%d{yyyy-MM-dd}.%i.log.gz

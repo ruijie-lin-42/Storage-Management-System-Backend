@@ -1,6 +1,7 @@
 package io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.service;
 
 import io.github.ruijie_lin_42.storage_management_system_backend.common.enums.Status;
+import io.github.ruijie_lin_42.storage_management_system_backend.common.exceptions.UserIdNotFoundException;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.auth.model.dto.SecurityUser;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.model.dto.UserAuthDTO;
 import io.github.ruijie_lin_42.storage_management_system_backend.modules.user.service.UserService;
@@ -25,15 +26,14 @@ public class SecurityUserDetailsService implements UserDetailsService {
         return toSecurityUser(userInfo);
     }
 
-    public UserDetails loadUserByUserId(Long userId) throws UsernameNotFoundException {
+    public UserDetails loadUserByUserId(Long userId) throws UserIdNotFoundException {
         UserAuthDTO userInfo = userService.findAuthInfoByUserId(userId);
-        if (userInfo == null) throw new UsernameNotFoundException("User does not exist: " + userId);
+        if (userInfo == null) throw new UserIdNotFoundException("User does not exist: " + userId);
         return toSecurityUser(userInfo);
     }
 
-    public void changePasswordById(Long id, String newPassword){
-        int affectedRows = userService.changePasswordById(id, newPassword);
-        // TODO: add formal loggers
+    public void changePasswordById(Long id, String newPassword) {
+        userService.changePasswordById(id, newPassword);
     }
 
     // ==================== helper methods ====================

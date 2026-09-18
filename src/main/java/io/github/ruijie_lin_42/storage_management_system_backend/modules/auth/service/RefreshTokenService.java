@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -56,23 +57,56 @@ public class RefreshTokenService {
 
     public String refresh(String refreshToken) {
         if (refreshToken != null) {
+            String tokenSnippet = refreshToken.substring(10);
             RefreshToken token = this.getTokenByValue(refreshToken);
-            if (token == null || token.getRevokedAt() != null) {
-                throw new AuthenticationException(ResultCode.INVALID_TOKEN);
+            // unrecognized token (couldn't find corresponding data in database)
+            if (token == null) {
+                throw new AuthenticationException(ResultCode.INVALID_TOKEN, Map.of(
+                        "reason", "Unrecognized refresh token",
+                        "tokenSnippet", tokenSnippet,
+                        // TODO: add unauthenticated user id by moving controller logic to here
+                        "userId (unauthenticated)", ""
+                ));
             }
+            // token already revoked
+            if (token.getRevokedAt() != null) {
+                throw new AuthenticationException(ResultCode.INVALID_TOKEN, Map.of(
+                        "reason", "Refresh token revoked",
+                        "tokenSnippet", tokenSnippet,
+                        "userId (unauthenticated)", token.getUserId(),
+                        "revokedAt", token.getRevokedAt()
+                ));
+            }
+            // token expired
             if (token.getExpiration().isBefore(Instant.now())) {
                 this.revokeTokenByValueOnRefresh(refreshToken);
-                throw new AuthenticationException(ResultCode.INVALID_TOKEN);
-            } else {
-                Long userId = token.getUserId();
-                UserDetails user = securityUserDetailsService.loadUserByUserId(userId);
-                if (user == null) {
-                    throw new AuthenticationException(ResultCode.INVALID_TOKEN);
-                }
-                return jwtService.getToken(userId);
+                throw new AuthenticationException(ResultCode.INVALID_TOKEN, Map.of(
+                        "reason", "Refresh token expired",
+                        "tokenSnippet", tokenSnippet,
+                        "userId (unauthenticated)", token.getUserId(),
+                        "expiredAt", token.getExpiration()
+                ));
             }
-        } else {
-            throw new AuthenticationException(ResultCode.INVALID_TOKEN);
+            Long userId = token.getUserId();
+            UserDetails user = securityUserDetailsService.loadUserByUserId(userId);
+            // couldn't find any user who should hold the token
+            if (user == null) {
+                throw new AuthenticationException(ResultCode.INVALID_TOKEN, Map.of(
+                        "reason", "Unrecognized user",
+                        "tokenSnippet", tokenSnippet,
+                        "userId (unauthenticated)", token.getUserId()
+                ));
+            }
+            // if we didn't encounter all situations above, then refresh token for the user
+            return jwtService.getToken(userId);
+        }
+        // if refreshToken is null
+        else {
+            throw new AuthenticationException(ResultCode.INVALID_TOKEN, Map.of(
+                    "reason", "Null refresh token",
+                    // TODO: add unauthenticated user id by moving controller logic to here
+                    "userId (unauthenticated)", ""
+            ));
         }
     }
 
@@ -80,7 +114,8 @@ public class RefreshTokenService {
         int affectedRows = revokeTokenByValue(tokenValue);
         // TODO: change to formal loggers
         if (affectedRows > 1) {
-            System.out.println("logout affected rows > 1");
+            throw new DataIntegrityException(ResultCode.UPDATE_AFFECTED_ROWS_INVALID, 1, affectedRows, "revokeRefreshTokenOnLogout",
+                    Map.of("tokenSnippet", tokenValue.substring(10)));
         } else if (affectedRows == 0) {
             System.out.println("logout failed");
         }
@@ -88,13 +123,9 @@ public class RefreshTokenService {
 
     private void revokeTokenByValueOnRefresh(String tokenValue) {
         int affectedRows = revokeTokenByValue(tokenValue);
-        // TODO: change to formal loggers
         if (affectedRows > 1) {
-            System.out.println("refresh token revoked > 1");
-            throw new DataIntegrityException(ResultCode.DELETE_AFFECTED_ROWS_INVALID);
-        } else if (affectedRows == 0) {
-            // not likely to happen
-            System.out.println("unable to revoke refresh token");
+            throw new DataIntegrityException(ResultCode.UPDATE_AFFECTED_ROWS_INVALID, 1, affectedRows, "revokeRefreshTokenOnRefresh",
+                    Map.of("tokenSnippet", tokenValue.substring(10)));
         }
     }
 
